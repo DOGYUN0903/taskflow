@@ -1,4 +1,4 @@
-package com.taskflow.domain.member.dto;
+package com.taskflow.domain.auth.dto.signup;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 
 @Getter
-public class MemberSignupRequestDto {
+public class SignupRequestDto {
 
     @NotBlank(message = "사용자 닉네임은 필수로 입력해주세요.")
     private String username;

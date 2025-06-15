@@ -1,4 +1,4 @@
-package com.taskflow.domain.member.dto;
+package com.taskflow.domain.auth.dto.signup;
 
 import com.taskflow.domain.member.entity.Member;
 import com.taskflow.domain.member.entity.UserRole;
@@ -7,7 +7,7 @@ import lombok.Getter;
 import java.time.LocalDateTime;
 
 @Getter
-public class MemberSignupResponseDto {
+public class SignupResponseDto {
 
     private Long id;
     private String username;
@@ -16,7 +16,7 @@ public class MemberSignupResponseDto {
     private UserRole userRole;
     private LocalDateTime createdAt;
 
-    public MemberSignupResponseDto(Member member) {
+    public SignupResponseDto(Member member) {
         this.id = member.getId();
         this.username = member.getUsername();
         this.email = member.getEmail();
