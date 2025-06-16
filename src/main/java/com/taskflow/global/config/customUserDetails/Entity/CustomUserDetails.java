@@ -1,5 +1,6 @@
 package com.taskflow.global.config.customUserDetails.Entity;
 
+import com.taskflow.domain.member.entity.Member;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -16,7 +17,7 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_" + member.getRole()));
+        return List.of(new SimpleGrantedAuthority("ROLE_" + member.getUserRole()));
     }
 
     @Override

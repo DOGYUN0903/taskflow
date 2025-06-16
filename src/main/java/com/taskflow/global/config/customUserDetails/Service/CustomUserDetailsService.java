@@ -1,5 +1,7 @@
 package com.taskflow.global.config.customUserDetails.Service;
 
+import com.taskflow.domain.member.entity.Member;
+import com.taskflow.domain.member.repository.MemberRepository;
 import com.taskflow.global.config.customUserDetails.Entity.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetailsService;
