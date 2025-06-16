@@ -20,8 +20,8 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     boolean existsByUsername(String username);
 
     // Dto Projection을 사용해 불필요한 쿼리 제거 - 성능 개선
-    @Query("SELECT new com.taskflow.domain.member.dto.MemberProfileResponseDto(m.name, m.email, m.userRole) FROM Member m WHERE m.id = :memberId")
-    Optional<MemberProfileResponseDto> findProfileDtoById(@Param("memberId") Long memberId);
+    @Query("SELECT new com.taskflow.domain.member.dto.MemberProfileResponseDto(m.name, m.email, m.userRole) FROM Member m WHERE m.email = :email")
+    Optional<MemberProfileResponseDto> findProfileDtoByEmail(@Param("email") String email);
 
     Optional<Member> findByEmail(String email);
 }

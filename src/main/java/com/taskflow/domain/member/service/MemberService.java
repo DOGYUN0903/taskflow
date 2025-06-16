@@ -6,7 +6,7 @@ import com.taskflow.domain.member.entity.Member;
 public interface MemberService {
     Member findByIdOrElseThrow(Long memberId);
 
-    MemberProfileResponseDto getMemberProfile(Long memberId);
+    MemberProfileResponseDto getMemberProfile(String username);
 
     void withdrawMember(Long memberId);
 }
