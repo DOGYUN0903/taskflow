@@ -1,15 +1,16 @@
 package com.taskflow.domain.member.service;
 
-import com.taskflow.domain.member.dto.MemberSignupRequestDto;
-import com.taskflow.domain.member.dto.MemberSignupResponseDto;
+
+import com.taskflow.domain.member.dto.MemberProfileResponseDto;
 import com.taskflow.domain.member.entity.Member;
-import com.taskflow.domain.member.entity.UserRole;
 import com.taskflow.domain.member.repository.MemberRepository;
-import com.taskflow.global.exception.member.MemberEmailDuplicateException;
-import com.taskflow.global.exception.member.MemberUsernameDuplicateException;
+import com.taskflow.global.exception.member.MemberDeletedException;
+import com.taskflow.global.exception.member.MemberNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -17,38 +18,25 @@ public class MemberServiceImpl implements MemberService {
 
     private final MemberRepository memberRepository;
 
-    @Transactional
+    // 회원 Id를 이용한 회원 조회 메서드
     @Override
-    public MemberSignupResponseDto signup(MemberSignupRequestDto requestDto) {
+    public Member findByIdOrElseThrow(Long memberId) {
+        Member findMember = memberRepository.findById(memberId)
+                .orElseThrow(() -> new MemberNotFoundException());
 
-        // 1. 이메일 중복 체크
-        if (memberRepository.existsByEmail(requestDto.getEmail())) {
-            throw new MemberEmailDuplicateException();
+        if (findMember.getIs_deleted()) {
+            throw new MemberDeletedException();
         }
+        return findMember;
+    }
 
-        // 닉네임 중복 체크(닉네임 유니크키로 지정이 되어있음)
-        if (memberRepository.existsByUsername(requestDto.getUsername())) {
-            throw new MemberUsernameDuplicateException();
-        }
+    @Transactional(readOnly = true)
+    @Override
+    public MemberProfileResponseDto getMemberProfile(Long memberId) {
 
-        // 2. 비밀번호 암호화
-        //TODO: 비밀번호 암호화 하는 로직 추가
+        MemberProfileResponseDto memberProfileResponseDto = memberRepository.findProfileDtoById(memberId)
+                .orElseThrow(() -> new MemberNotFoundException());
 
-        // 3. Member객체 생성
-        UserRole userRole = UserRole.of(requestDto.getUserRole());
-
-        Member member = Member.builder()
-                .username(requestDto.getUsername())
-                .email(requestDto.getEmail())
-                .password(requestDto.getPassword())
-                .name(requestDto.getName())
-                .userRole(userRole)
-                .build();
-
-        // 4. Repository에 Member를 save하기
-        Member savedMember = memberRepository.save(member);
-
-        // 5. 응답객체 생성
-        return new MemberSignupResponseDto(savedMember);
+        return memberProfileResponseDto;
     }
 }
