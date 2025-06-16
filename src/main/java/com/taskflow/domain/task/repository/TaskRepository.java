@@ -1,6 +1,9 @@
 package com.taskflow.domain.task.repository;
 
+import com.taskflow.domain.member.entity.Member;
 import com.taskflow.domain.task.entity.Task;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -27,8 +30,26 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     /**
      * 특정 담당자의 삭제되지 않은 일정 목록을 반환
      *
-     * @param managerId 담당자 ID
+     * @param manager 담당자 Member 객체
      * @return 해당 담당자의 Task 리스트
      */
-    List<Task> findAllByManagerIdAndIsDeletedFalse(Long managerId);
+    List<Task> findAllByManagerAndIsDeletedFalse(Member manager);
+
+    /**
+     * 제목 키워드를 포함하고 삭제되지 않은 일정 목록을 페이징으로 반환
+     *
+     * @param title 제목 키워드
+     * @param pageable 페이징 정보
+     * @return 페이징된 Task 리스트
+     */
+    Page<Task> findByTitleContainingAndIsDeletedFalse(String title, Pageable pageable);
+
+    /**
+     * 설명 키워드를 포함하고 삭제되지 않은 일정 목록을 페이징으로 반환
+     *
+     * @param description 설명 키워드
+     * @param pageable 페이징 정보
+     * @return 페이징된 Task 리스트
+     */
+    Page<Task> findByDescriptionContainingAndIsDeletedFalse(String description, Pageable pageable);
 }

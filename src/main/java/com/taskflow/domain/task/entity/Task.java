@@ -1,5 +1,6 @@
 package com.taskflow.domain.task.entity;
 
+import com.taskflow.domain.member.entity.Member;
 import com.taskflow.domain.task.enums.TaskPriority;
 import com.taskflow.domain.task.enums.TaskStatus;
 import com.taskflow.global.common.BaseEntity;
@@ -8,6 +9,9 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
+/**
+ * 일정(Task) 엔티티
+ */
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -17,30 +21,57 @@ public class Task extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; // PK (일정 ID)
+    private Long id;
 
-    private Long creatorId; // 작성자 ID
+    /**
+     * 일정 작성자 (회원)
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "creator_id", nullable = false)
+    private Member creator;
 
-    private Long managerId; // 담당자 ID
+    /**
+     * 일정 담당자 (회원)
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "manager_id", nullable = false)
+    private Member manager;
 
-    private String title; // 일정 제목
+    private String title;
 
     @Column(columnDefinition = "TEXT")
-    private String description; // 일정 상세 설명
+    private String description;
 
     @Enumerated(EnumType.STRING)
-    private TaskPriority priority; // 우선순위 (LOW, MEDIUM, HIGH)
+    private TaskPriority priority;
 
     @Enumerated(EnumType.STRING)
-    private TaskStatus status; // 상태 (TODO, IN_PROGRESS, DONE)
+    private TaskStatus status;
 
-    private LocalDateTime dueDate; // 마감일
+    private LocalDateTime dueDate;
 
-    private LocalDateTime startDate; // 시작일 (선택값)
+    private LocalDateTime startDate;
 
-    private Boolean isDeleted; // 삭제 여부 (soft delete)
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT false")
+    private Boolean isDeleted;
 
-    private LocalDateTime deletedAt; // 삭제된 시간
+    private LocalDateTime deletedAt;
 
+    /**
+     * 일정 수정
+     */
+    public void update(String title, String description, TaskPriority priority, TaskStatus status) {
+        this.title = title;
+        this.description = description;
+        this.priority = priority;
+        this.status = status;
+    }
 
+    /**
+     * Soft delete
+     */
+    public void softDelete() {
+        this.isDeleted = true;
+        this.deletedAt = LocalDateTime.now();
+    }
 }
