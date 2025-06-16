@@ -35,5 +35,10 @@ public class Member extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private UserRole userRole;
 
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT false")
     private Boolean is_deleted = false;
+
+    public void softDelete() {
+        this.is_deleted = true;
+    }
 }

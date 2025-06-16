@@ -1,11 +1,15 @@
 package com.taskflow.domain.auth.service;
 
+import com.taskflow.domain.auth.dto.login.LoginRequestDto;
+import com.taskflow.domain.auth.dto.login.LoginResponseDto;
 import com.taskflow.domain.auth.dto.signup.SignupRequestDto;
 import com.taskflow.domain.auth.dto.signup.SignupResponseDto;
 import com.taskflow.domain.member.entity.Member;
 import com.taskflow.domain.member.entity.UserRole;
 import com.taskflow.domain.member.repository.MemberRepository;
 import com.taskflow.global.exception.member.MemberEmailDuplicateException;
+import com.taskflow.global.exception.member.MemberNotFoundException;
+import com.taskflow.global.exception.member.MemberPasswordMissMatchException;
 import com.taskflow.global.exception.member.MemberUsernameDuplicateException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -42,11 +46,35 @@ public class AuthServiceImpl implements AuthService {
                 .password(requestDto.getPassword())
                 .name(requestDto.getName())
                 .userRole(userRole)
+                .is_deleted(false)
                 .build();
 
         // 레포지토리에 member 저장
         Member savedMember = memberRepository.save(member);
 
         return new SignupResponseDto(savedMember);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public LoginResponseDto login(LoginRequestDto requestDto) {
+        // 이메일 검증하기
+        Member findMember = memberRepository.findByEmail((requestDto.getEmail()))
+                .orElseThrow(() -> new MemberNotFoundException());
+
+        // 비밀번호 검증하기
+        if (!requestDto.getPassword().equals(findMember.getPassword())) {
+            throw new MemberPasswordMissMatchException();
+        }
+
+        //TODO: 토큰 생성 로직 구현
+
+        // LoginResponseDto() 생성자 수정 후, 토큰 넣어주기
+        return new LoginResponseDto();
+    }
+
+    @Override
+    public void logout() {
+        // 토큰 제거 로직
     }
 }
