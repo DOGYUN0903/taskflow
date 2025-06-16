@@ -30,9 +30,8 @@ public class MemberServiceImpl implements MemberService {
 
     @Transactional(readOnly = true)
     @Override
-    public MemberProfileResponseDto getMemberProfile(Long memberId) {
-
-        MemberProfileResponseDto memberProfileResponseDto = memberRepository.findProfileDtoById(memberId)
+    public MemberProfileResponseDto getMemberProfile(String username) {
+        MemberProfileResponseDto memberProfileResponseDto = memberRepository.findProfileDtoByEmail((username))
                 .orElseThrow(() -> new MemberNotFoundException());
 
         return memberProfileResponseDto;
