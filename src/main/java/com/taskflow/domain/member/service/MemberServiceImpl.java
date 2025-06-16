@@ -38,6 +38,7 @@ public class MemberServiceImpl implements MemberService {
         return memberProfileResponseDto;
     }
 
+    @Transactional
     @Override
     public void withdrawMember(Long memberId) {
         Member findMember = findByIdOrElseThrow(memberId);

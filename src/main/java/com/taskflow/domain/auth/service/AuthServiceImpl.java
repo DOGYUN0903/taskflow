@@ -46,6 +46,7 @@ public class AuthServiceImpl implements AuthService {
                 .password(requestDto.getPassword())
                 .name(requestDto.getName())
                 .userRole(userRole)
+                .is_deleted(false)
                 .build();
 
         // 레포지토리에 member 저장
