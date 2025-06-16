@@ -6,10 +6,7 @@ import com.taskflow.global.common.ApiResponse;
 import com.taskflow.global.response.success.MemberSuccess;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/members")
@@ -23,5 +20,13 @@ public class MemberController {
         return ResponseEntity
                 .status(MemberSuccess.PROFILE_READ.getStatus())
                 .body(ApiResponse.success(MemberSuccess.PROFILE_READ.getMessage(), memberService.getMemberProfile(memberId)));
+    }
+
+    @DeleteMapping("/{memberId}")
+    public ResponseEntity<ApiResponse<Void>> withdrawMember(@PathVariable("memberId") Long memberId) {
+        memberService.withdrawMember(memberId);
+        return ResponseEntity
+                .status(MemberSuccess.WITHDRAW.getStatus())
+                .body(ApiResponse.success(MemberSuccess.WITHDRAW.getMessage()));
     }
 }

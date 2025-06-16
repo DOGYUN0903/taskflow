@@ -36,4 +36,8 @@ public class Member extends BaseEntity {
     private UserRole userRole;
 
     private Boolean is_deleted = false;
+
+    public void softDelete() {
+        this.is_deleted = true;
+    }
 }

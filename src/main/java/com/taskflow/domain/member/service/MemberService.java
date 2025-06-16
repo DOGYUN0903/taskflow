@@ -7,4 +7,6 @@ public interface MemberService {
     Member findByIdOrElseThrow(Long memberId);
 
     MemberProfileResponseDto getMemberProfile(Long memberId);
+
+    void withdrawMember(Long memberId);
 }

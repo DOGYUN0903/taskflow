@@ -10,8 +10,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
-
 @Service
 @RequiredArgsConstructor
 public class MemberServiceImpl implements MemberService {
@@ -38,5 +36,11 @@ public class MemberServiceImpl implements MemberService {
                 .orElseThrow(() -> new MemberNotFoundException());
 
         return memberProfileResponseDto;
+    }
+
+    @Override
+    public void withdrawMember(Long memberId) {
+        Member findMember = findByIdOrElseThrow(memberId);
+        findMember.softDelete();
     }
 }
