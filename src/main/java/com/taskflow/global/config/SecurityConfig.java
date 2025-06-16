@@ -1,6 +1,6 @@
 package com.taskflow.global.config;
 
-import com.taskflow.domain.MemberRole;
+import com.taskflow.domain.member.entity.UserRole;
 import com.taskflow.global.filter.JwtFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -25,9 +25,9 @@ public class SecurityConfig {
                 .addFilterBefore(jwtFilter, SecurityContextHolderAwareRequestFilter.class)
                 //인가용
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/login", "/auth/signup").permitAll()
-                        .requestMatchers("/api/admin/**").hasRole(MemberRole.ADMIN.name())
-                        .requestMatchers("/api/user/**").hasRole(MemberRole.USER.name())
+                        .requestMatchers("/api/auth/login", "/api/auth/signup").permitAll()
+                        .requestMatchers("/api/admin/**").hasRole(UserRole.ADMIN.name())
+                        .requestMatchers("/api/user/**").hasRole(UserRole.USER.name())
                         .anyRequest().authenticated()
                 )
                 .build();
