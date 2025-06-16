@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -21,4 +22,6 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     // Dto Projection을 사용해 불필요한 쿼리 제거 - 성능 개선
     @Query("SELECT new com.taskflow.domain.member.dto.MemberProfileResponseDto(m.name, m.email, m.userRole) FROM Member m WHERE m.id = :memberId")
     Optional<MemberProfileResponseDto> findProfileDtoById(@Param("memberId") Long memberId);
+
+    Optional<Member> findByEmail(String email);
 }
