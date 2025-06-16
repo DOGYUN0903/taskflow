@@ -7,10 +7,12 @@ import com.taskflow.domain.auth.dto.signup.SignupResponseDto;
 import com.taskflow.domain.member.entity.Member;
 import com.taskflow.domain.member.entity.UserRole;
 import com.taskflow.domain.member.repository.MemberRepository;
+import com.taskflow.global.config.PasswordEncoder;
 import com.taskflow.global.exception.member.MemberEmailDuplicateException;
 import com.taskflow.global.exception.member.MemberNotFoundException;
 import com.taskflow.global.exception.member.MemberPasswordMissMatchException;
 import com.taskflow.global.exception.member.MemberUsernameDuplicateException;
+import com.taskflow.global.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthServiceImpl implements AuthService {
 
     private final MemberRepository memberRepository;
+    private final JwtUtil jwtUtil;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     @Override
@@ -36,6 +40,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         //TODO: 비밀번호 암호화 로직 추가
+        String encodedPassword = passwordEncoder.encode(requestDto.getPassword());
 
         UserRole userRole = UserRole.of(requestDto.getUserRole());
 
@@ -43,7 +48,7 @@ public class AuthServiceImpl implements AuthService {
         Member member = Member.builder()
                 .username(requestDto.getUsername())
                 .email(requestDto.getEmail())
-                .password(requestDto.getPassword())
+                .password(encodedPassword)
                 .name(requestDto.getName())
                 .userRole(userRole)
                 .is_deleted(false)
@@ -63,14 +68,15 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() -> new MemberNotFoundException());
 
         // 비밀번호 검증하기
-        if (!requestDto.getPassword().equals(findMember.getPassword())) {
+        if (!passwordEncoder.matches(requestDto.getPassword(), findMember.getPassword())) {
             throw new MemberPasswordMissMatchException();
         }
 
         //TODO: 토큰 생성 로직 구현
+        String token = jwtUtil.issueJwt(findMember.getEmail(), findMember.getUserRole());
 
         // LoginResponseDto() 생성자 수정 후, 토큰 넣어주기
-        return new LoginResponseDto();
+        return new LoginResponseDto(token);
     }
 
     @Override
