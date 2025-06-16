@@ -60,7 +60,7 @@ public class Task extends BaseEntity {
     /**
      * 일정 수정
      */
-    public void update(String title, String description, TaskPriority priority, TaskStatus status) {
+    public void update(String title, String description, TaskPriority priority, TaskStatus status, Member manager) {
         this.title = title;
         this.description = description;
         this.priority = priority;

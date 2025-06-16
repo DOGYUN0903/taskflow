@@ -15,6 +15,7 @@ import java.util.List;
  * <p>추가적으로 필요한 메서드:
  * <ul>
  *     <li>특정 작성자 또는 담당자의 일정 목록 조회</li>
+ *     <li>제목, 설명 키워드 검색 (페이징)</li>
  *     <li>삭제되지 않은 일정만 필터링</li>
  * </ul>
  */
@@ -34,6 +35,14 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
      * @return 해당 담당자의 Task 리스트
      */
     List<Task> findAllByManagerAndIsDeletedFalse(Member manager);
+
+    /**
+     * 특정 작성자의 삭제되지 않은 일정 목록을 반환
+     *
+     * @param creator 작성자 Member 객체
+     * @return 해당 작성자의 Task 리스트
+     */
+    List<Task> findAllByCreatorAndIsDeletedFalse(Member creator);
 
     /**
      * 제목 키워드를 포함하고 삭제되지 않은 일정 목록을 페이징으로 반환
