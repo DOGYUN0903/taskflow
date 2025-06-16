@@ -38,4 +38,12 @@ public class AuthController {
                 .body(ApiResponse.success(AuthSuccess.LOGIN.getMessage(), authService.login(requestDto)));
     }
 
+    // 로그아웃 API
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout() {
+        authService.logout();
+        return ResponseEntity
+                .status(AuthSuccess.LOGOUT.getStatus())
+                .body(ApiResponse.success(AuthSuccess.LOGOUT.getMessage()));
+    }
 }

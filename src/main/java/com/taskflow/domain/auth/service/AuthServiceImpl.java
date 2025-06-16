@@ -71,4 +71,9 @@ public class AuthServiceImpl implements AuthService {
         // LoginResponseDto() 생성자 수정 후, 토큰 넣어주기
         return new LoginResponseDto();
     }
+
+    @Override
+    public void logout() {
+        // 토큰 제거 로직
+    }
 }
