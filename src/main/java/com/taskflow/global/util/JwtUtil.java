@@ -1,6 +1,6 @@
 package com.taskflow.global.util;
 
-import com.taskflow.domain.MemberRole;
+import com.taskflow.domain.member.entity.UserRole;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,7 +43,7 @@ public class JwtUtil {
     }
 
     // Jwt 생성
-    public String issueJwt(String email, MemberRole memberRole){
+    public String issueJwt(String email, UserRole userRole){
         // 토큰 생성 시간
         Date jwtIssuedAt = new Date();
         //만료 시간: 1시간 후
@@ -52,7 +52,7 @@ public class JwtUtil {
         return TOKEN_TYPE +
                 Jwts.builder()
                         .setSubject(email)   // 토큰 주인
-                        .claim("role", memberRole.name())    // 권한
+                        .claim("role", userRole.getRole())    // 권한
                         .setIssuedAt(jwtIssuedAt)   // 발급일
                         .setExpiration(jwtExpireAt) // 만료일
                         .signWith(key, SIGNATURE_ALGORITHM) // 비밀키와 알고리즘으로 서명
