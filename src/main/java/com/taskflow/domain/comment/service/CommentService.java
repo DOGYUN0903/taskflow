@@ -13,7 +13,7 @@ public interface CommentService {
 
     void deleteComment(Long id, String email);
 
-    List<CommentResponseDto> getCommentsByTaskId(Long taskId);
+    List<CommentResponseDto> getCommentsByTaskId(Long taskId, int page, int size);
 
     List<CommentResponseDto> searchComments(String keyword);
 

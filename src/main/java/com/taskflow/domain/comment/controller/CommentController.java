@@ -64,9 +64,11 @@ public class CommentController {
     // 특정 태스크의 댓글 목록 조회(최신순)
     @GetMapping("/task/{taskId}")
     public ResponseEntity<ApiResponse<List<CommentResponseDto>>> readCommentsByTaskAPI(
-            @PathVariable Long taskId
+            @PathVariable Long taskId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
     ) {
-        List<CommentResponseDto> responseDtoList = commentService.getCommentsByTaskId(taskId);
+        List<CommentResponseDto> responseDtoList = commentService.getCommentsByTaskId(taskId, page, size);
         return ResponseEntity.ok(ApiResponse.success(CommentSuccess.COMMENT_READ.getMessage(), responseDtoList));
     }
 
