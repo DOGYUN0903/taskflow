@@ -39,6 +39,12 @@ public class Comment extends BaseEntity {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    public Comment(Long taskId, String content, Member member) {
+        this.taskId = taskId;
+        this.content = content;
+        this.member = member;
+    }
+
     public void updateContent(String content) {
         this.content = content;
         this.updatedAt = LocalDateTime.now();

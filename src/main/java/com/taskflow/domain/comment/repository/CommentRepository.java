@@ -4,6 +4,7 @@ import com.taskflow.domain.comment.entity.Comment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 
 @Repository
@@ -14,4 +15,5 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 
     // 댓글 내용에 대한 Like 검색
     List<Comment> findByContentIsLike(String keyword);
+
 }
