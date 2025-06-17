@@ -53,6 +53,29 @@ public class TaskService {
     }
 
     /**
+     * 상태별 일정 목록 그룹핑 (칸반보드 용)
+     */
+    public Map<TaskStatus, List<TaskResponse>> getTasksByStatusGrouped() {
+        List<Task> allTasks = taskRepository.findAllByIsDeletedFalse();
+
+        return allTasks.stream()
+                .collect(Collectors.groupingBy(
+                        Task::getStatus,
+                        () -> new EnumMap<>(TaskStatus.class),
+                        Collectors.mapping(TaskResponse::from, Collectors.toList())
+                ));
+    }
+
+    /**
+     * 일정 단건 조회
+     */
+    public TaskResponse getTaskById(Long taskId) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(TaskNotFoundException::new);
+        return TaskResponse.from(task);
+    }
+
+    /**
      * 일정 수정 - 생성자 또는 담당자만 수정 가능
      */
     @Transactional
@@ -89,23 +112,11 @@ public class TaskService {
         task.softDelete();
     }
 
-    /**
-     * 상태별 일정 목록 그룹핑 (칸반보드 용)
-     */
-    public Map<TaskStatus, List<TaskResponse>> getTasksByStatusGrouped() {
-        List<Task> allTasks = taskRepository.findAllByIsDeletedFalse();
-
-        return allTasks.stream()
-                .collect(Collectors.groupingBy(
-                        Task::getStatus,
-                        () -> new EnumMap<>(TaskStatus.class),
-                        Collectors.mapping(TaskResponse::from, Collectors.toList())
-                ));
-    }
 
     /**
      * 일정 키워드 검색 (제목 또는 설명)
      */
+    /*
     public List<TaskResponse> searchTasksByKeyword(String keyword) {
         List<Task> allTasks = taskRepository.findAllByIsDeletedFalse();
 
@@ -115,4 +126,5 @@ public class TaskService {
                 .map(TaskResponse::from)
                 .collect(Collectors.toList());
     }
+    */
 }
