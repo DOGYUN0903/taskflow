@@ -10,6 +10,4 @@ public interface AuthService {
     SignupResponseDto signup(SignupRequestDto requestDto);
 
     LoginResponseDto login(LoginRequestDto requestDto);
-
-    void logout();
 }

@@ -19,13 +19,16 @@ public class MemberController {
 
     @GetMapping("/profile")
     public ResponseEntity<ApiResponse<MemberProfileResponseDto>> getMemberProfile(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long memberId = userDetails.getId();
+
         return ResponseEntity
                 .status(MemberSuccess.PROFILE_READ.getStatus())
-                .body(ApiResponse.success(MemberSuccess.PROFILE_READ.getMessage(), memberService.getMemberProfile(userDetails.getUsername())));
+                .body(ApiResponse.success(MemberSuccess.PROFILE_READ.getMessage(), memberService.getMemberProfile(memberId)));
     }
 
-    @DeleteMapping("/{memberId}")
-    public ResponseEntity<ApiResponse<Void>> withdrawMember(@PathVariable("memberId") Long memberId) {
+    @DeleteMapping("/withdraw")
+    public ResponseEntity<ApiResponse<Void>> withdrawMember(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long memberId = userDetails.getId();
         memberService.withdrawMember(memberId);
         return ResponseEntity
                 .status(MemberSuccess.WITHDRAW.getStatus())
