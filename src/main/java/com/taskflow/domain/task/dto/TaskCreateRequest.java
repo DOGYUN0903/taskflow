@@ -4,6 +4,7 @@ import com.taskflow.domain.task.enums.TaskPriority;
 import com.taskflow.domain.task.enums.TaskStatus;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
  * 클라이언트로부터 일정 생성 요청 데이터를 수신
  */
 @Getter
+@Builder
 public class TaskCreateRequest {
 
     @NotBlank(message = "제목은 필수 입력해주세요.")
