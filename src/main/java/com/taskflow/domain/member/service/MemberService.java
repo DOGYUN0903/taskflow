@@ -4,9 +4,8 @@ import com.taskflow.domain.member.dto.MemberProfileResponseDto;
 import com.taskflow.domain.member.entity.Member;
 
 public interface MemberService {
-    Member findByIdOrElseThrow(Long memberId);
 
-    MemberProfileResponseDto getMemberProfile(String username);
+    MemberProfileResponseDto getMemberProfile(Long memberId);
 
     void withdrawMember(Long memberId);
 }

@@ -16,22 +16,14 @@ public class MemberServiceImpl implements MemberService {
 
     private final MemberRepository memberRepository;
 
-    // 회원 Id를 이용한 회원 조회 메서드
-    @Override
-    public Member findByIdOrElseThrow(Long memberId) {
-        Member findMember = memberRepository.findById(memberId)
-                .orElseThrow(() -> new MemberNotFoundException());
-
-        if (findMember.getIs_deleted()) {
-            throw new MemberDeletedException();
-        }
-        return findMember;
-    }
-
     @Transactional(readOnly = true)
     @Override
-    public MemberProfileResponseDto getMemberProfile(String username) {
-        MemberProfileResponseDto memberProfileResponseDto = memberRepository.findProfileDtoByEmail((username))
+    public MemberProfileResponseDto getMemberProfile(Long memberId) {
+
+        // 탈퇴한 회원 검증
+        Member findMember = findByIdOrElseThrow(memberId);
+
+        MemberProfileResponseDto memberProfileResponseDto = memberRepository.findProfileDtoById((findMember.getId()))
                 .orElseThrow(() -> new MemberNotFoundException());
 
         return memberProfileResponseDto;
@@ -42,5 +34,16 @@ public class MemberServiceImpl implements MemberService {
     public void withdrawMember(Long memberId) {
         Member findMember = findByIdOrElseThrow(memberId);
         findMember.softDelete();
+    }
+
+    // 회원 Id를 이용한 회원 조회 메서드
+    public Member findByIdOrElseThrow(Long memberId) {
+        Member findMember = memberRepository.findById(memberId)
+                .orElseThrow(() -> new MemberNotFoundException());
+
+        if (findMember.getIs_deleted()) {
+            throw new MemberDeletedException();
+        }
+        return findMember;
     }
 }
