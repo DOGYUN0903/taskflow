@@ -2,6 +2,7 @@ package com.taskflow.domain.task.dto;
 
 import com.taskflow.domain.task.enums.TaskPriority;
 import com.taskflow.domain.task.enums.TaskStatus;
+import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -31,6 +32,7 @@ public class TaskUpdateRequest {
 
     private LocalDateTime startDate;
 
+    @Future(message = "마감일은 현재보다 이후여야 합니다.")
     @NotNull(message = "마감일은 필수로 지정해야 합니다.")
     private LocalDateTime dueDate;
 }

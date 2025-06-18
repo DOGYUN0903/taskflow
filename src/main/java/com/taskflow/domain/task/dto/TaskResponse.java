@@ -5,13 +5,11 @@ import com.taskflow.domain.task.entity.Task;
 import com.taskflow.domain.task.enums.TaskPriority;
 import com.taskflow.domain.task.enums.TaskStatus;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
-/**
- * 일정 전체 조회 응답을 위한 DTO 클래스
- * 클라이언트에게 일정 목록 조회 결과를 반환할 때 사용
- */
 @Getter
 public class TaskResponse {
 
@@ -21,10 +19,8 @@ public class TaskResponse {
     private LocalDateTime dueDate;
     private TaskPriority priority;
     private TaskStatus status;
-
     private Long assigneeId;
     private MemberInfoResponse assignee;
-
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -35,10 +31,9 @@ public class TaskResponse {
         this.dueDate = task.getDueDate();
         this.priority = task.getPriority();
         this.status = task.getStatus();
-        this.assigneeId = task.getManager().getId(); // 💡 연관관계에서 manager로 변경된 점 주의!
+        this.assigneeId = task.getManager().getId();
         this.assignee = new MemberInfoResponse(task.getManager());
         this.createdAt = task.getCreatedAt();
         this.updatedAt = task.getUpdatedAt();
     }
 }
-
