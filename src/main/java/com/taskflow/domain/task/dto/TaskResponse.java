@@ -47,4 +47,14 @@ public class TaskResponse {
                 .updatedAt(task.getUpdatedAt())
                 .build();
     }
+
+    public static TaskResponse forKanban(Task task) {
+        return TaskResponse.builder()
+                .title(task.getTitle())
+                .description(task.getDescription())
+                .priority(task.getPriority())
+                .dueDate(task.getDueDate())
+                .build();
+    }
+
 }

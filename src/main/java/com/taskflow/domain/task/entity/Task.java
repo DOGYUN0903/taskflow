@@ -60,12 +60,17 @@ public class Task extends BaseEntity {
     /**
      * 일정 수정
      */
-    public void update(String title, String description, TaskPriority priority, TaskStatus status, Member manager) {
+    public void update(String title, String description, TaskPriority priority, TaskStatus status,
+                       LocalDateTime dueDate, LocalDateTime startDate, Member manager) {
         this.title = title;
         this.description = description;
         this.priority = priority;
         this.status = status;
+        this.dueDate = dueDate;
+        this.startDate = startDate;
+        this.manager = manager;
     }
+
 
     /**
      * Soft delete
