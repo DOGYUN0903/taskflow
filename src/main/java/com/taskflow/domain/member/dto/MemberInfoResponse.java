@@ -13,12 +13,10 @@ public class MemberInfoResponse {
     private String name;
     private String email;
 
-    public static MemberInfoResponse from(Member member) {
-        return new MemberInfoResponse(
-                member.getId(),
-                member.getUsername(),
-                member.getName(),
-                member.getEmail()
-        );
+    public MemberInfoResponse(Member member){
+        this.id = member.getId();
+        this.username = member.getUsername();
+        this.name = member.getName();
+        this.email = member.getEmail();
     }
 }

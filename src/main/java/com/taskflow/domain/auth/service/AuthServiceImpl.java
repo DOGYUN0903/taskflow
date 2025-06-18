@@ -11,7 +11,7 @@ import com.taskflow.domain.member.entity.UserRole;
 import com.taskflow.domain.member.exception.*;
 import com.taskflow.domain.member.repository.MemberRepository;
 import com.taskflow.domain.member.service.MemberService;
-import com.taskflow.global.annotation.LogActivity;
+//import com.taskflow.global.annotation.LogActivity;
 import com.taskflow.global.config.PasswordEncoder;
 import com.taskflow.global.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
@@ -64,7 +64,7 @@ public class AuthServiceImpl implements AuthService {
         return new SignupResponseDto(savedMember);
     }
 
-    @LogActivity(ActivityType.USER_LOGGED_IN)
+    //@LogActivity(ActivityType.USER_LOGGED_IN)
     @Transactional
     @Override
     public LoginResponseDto login(LoginRequestDto requestDto) {
@@ -89,7 +89,7 @@ public class AuthServiceImpl implements AuthService {
         return new LoginResponseDto(tokenWithoutPrefix);
     }
 
-    @LogActivity(ActivityType.USER_WITHDRAW)
+    //@LogActivity(ActivityType.USER_WITHDRAW)
     @Transactional
     @Override
     public void withdrawMember(Long memberId, MemberWithdrawRequestDto requestDto) {
