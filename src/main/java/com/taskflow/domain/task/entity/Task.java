@@ -133,6 +133,16 @@ public class Task {
     }
 
     /**
+     * 태스크의 시작일(startDate)을 설정하는 메서드
+     * 상태가 IN_PROGRESS로 변경될 때 호출됨
+     *
+     * @param startDate 작업 시작일
+     */
+    public void setStartDate(LocalDateTime startDate) {
+        this.startDate = startDate;
+    }
+
+    /**
      * 일정 삭제 처리
      */
     public void delete() {

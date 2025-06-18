@@ -5,16 +5,14 @@ import com.taskflow.domain.member.repository.MemberRepository;
 import com.taskflow.domain.task.dto.*;
 import com.taskflow.domain.task.entity.Task;
 import com.taskflow.domain.task.enums.TaskStatus;
-import com.taskflow.domain.task.exception.CreatorNotFoundException;
-import com.taskflow.domain.task.exception.InvalidStatusException;
-import com.taskflow.domain.task.exception.AssigneeNotFoundException;
-import com.taskflow.domain.task.exception.TaskNotFoundException;
+import com.taskflow.domain.task.exception.*;
 import com.taskflow.domain.task.repository.TaskRepository;
 import com.taskflow.global.response.error.TaskError;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -135,11 +133,34 @@ public class TaskService {
         Member assignee = memberRepository.findById(request.getAssigneeId())
                 .orElseThrow(AssigneeNotFoundException::new);
 
+        // 권한 확인: 요청자가 현재 할당된 담당자인지 확인
+        if (!task.getAssignee().getEmail().equals(requesterEmail)) {
+            throw new UnauthorizedStatusChangeException(); // 커스텀 예외
+        }
+
+        // 상태 순서 검증
+        TaskStatus currentStatus = task.getStatus();
+        TaskStatus newStatus = request.getStatus();
+
+        boolean validTransition =
+                (currentStatus == TaskStatus.TODO && newStatus == TaskStatus.IN_PROGRESS) ||
+                        (currentStatus == TaskStatus.IN_PROGRESS && newStatus == TaskStatus.DONE) ||
+                        (currentStatus == newStatus); // 같은 상태로는 허용
+
+        if (!validTransition) {
+            throw new InvalidStatusTransitionException(); // 커스텀 예외
+        }
+
+        // IN_PROGRESS 상태로 바뀔 때 시작일 기록
+        if (currentStatus != TaskStatus.IN_PROGRESS && newStatus == TaskStatus.IN_PROGRESS && task.getStartDate() == null) {
+            task.setStartDate(LocalDateTime.now());
+        }
+
         task.update(
                 request.getTitle(),
                 request.getDescription(),
                 request.getPriority(),
-                request.getStatus(),
+                newStatus,
                 request.getDueDate(),
                 assignee
         );
