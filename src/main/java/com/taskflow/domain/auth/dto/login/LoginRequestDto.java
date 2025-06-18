@@ -8,9 +8,8 @@ import lombok.Getter;
 @Getter
 public class LoginRequestDto {
 
-    @Email
-    @NotBlank(message = "이메일은 필수로 입력해주세요.")
-    private String email;
+    @NotBlank(message = "아이디는 필수로 입력해주세요.")
+    private String username;
 
     @Pattern(
             regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*()\\-_=+\\[{\\]};:'\",<.>/?]).{8,}$",
