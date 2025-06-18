@@ -45,6 +45,7 @@ public class TaskCreateRequest {
     /**
      * 마감일 (현재 시간보다 이후여야 함)
      */
+    @NotNull(message = "마감일은 필수입니다.")
     @Future(message = "마감일은 현재보다 이후여야 합니다.")
     private LocalDateTime dueDate;
 }

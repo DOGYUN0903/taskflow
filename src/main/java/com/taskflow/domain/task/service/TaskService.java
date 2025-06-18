@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -83,14 +84,26 @@ public class TaskService {
                 .filter(task -> assigneeId == null || Objects.equals(task.getAssignee().getId(), assigneeId))
                 .collect(Collectors.toList());
 
-        // 결과 없음 처리
+        // 결과가 없을 경우 - 일부 조건만 예외 처리
         if (filtered.isEmpty()) {
-            if (search != null) throw new TaskNotFoundException(TaskError.TASK_NOT_FOUND_BY_SEARCH);
-            if (assigneeId != null) throw new TaskNotFoundException(TaskError.TASK_NOT_FOUND_BY_ASSIGNEE);
-            throw new TaskNotFoundException();
+            if (search != null) {
+                throw new TaskNotFoundException(TaskError.TASK_NOT_FOUND_BY_SEARCH);
+            }
+            if (assigneeId != null) {
+                throw new TaskNotFoundException(TaskError.TASK_NOT_FOUND_BY_ASSIGNEE);
+            }
+
+            // status만 조건이거나, 아예 조건 없을 경우엔 빈 결과 반환
+            return new TaskPageResponse(
+                    Collections.emptyList(),
+                    0,
+                    0,
+                    size != null ? size : 0,
+                    page != null ? page : 0
+            );
         }
 
-        // 페이징
+        // 페이징 계산
         int start = (page != null && size != null) ? page * size : 0;
         int end = (size != null) ? Math.min(start + size, filtered.size()) : filtered.size();
         List<TaskResponse> paged = filtered.subList(start, end).stream()
@@ -105,6 +118,7 @@ public class TaskService {
                 page != null ? page : 0
         );
     }
+
 
     /**
      * 일정 단건 조회
