@@ -63,9 +63,8 @@ public class AuthServiceImpl implements AuthService {
     @Transactional(readOnly = true)
     @Override
     public LoginResponseDto login(LoginRequestDto requestDto) {
-        // 이메일 검증하기
-        Member findMember = memberRepository.findByEmail((requestDto.getEmail()))
-                .orElseThrow(() -> new MemberNotFoundException());
+        // 이메일 중복 검증 + 탈퇴한 사용자 검증
+        Member findMember = getActiveMemberByEmail(requestDto.getEmail());
 
         // 비밀번호 검증하기
         if (!passwordEncoder.matches(requestDto.getPassword(), findMember.getPassword())) {
@@ -79,8 +78,11 @@ public class AuthServiceImpl implements AuthService {
         return new LoginResponseDto(token);
     }
 
-    @Override
-    public void logout() {
-        // 토큰 제거 로직
+    // 이메일로 회원을 조회하고, 탈퇴하지 않은 사용자만 반환합니다.
+    // 조건에 맞는 사용자가 없다면 예외(MemberNotFoundException)를 발생시킵니다.
+    private Member getActiveMemberByEmail(String email) {
+        return memberRepository.findByEmail(email)
+                .filter(member -> !Boolean.TRUE.equals(member.getIs_deleted())) // 조회된 회원이 '삭제되지 않은 상태'인지 확인
+                .orElseThrow(() -> new MemberNotFoundException()); // 조건에 맞는 회원이 없다면 예외 발생
     }
 }
