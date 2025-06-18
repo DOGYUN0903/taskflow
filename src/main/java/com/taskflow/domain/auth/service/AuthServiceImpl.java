@@ -11,7 +11,7 @@ import com.taskflow.domain.member.entity.UserRole;
 import com.taskflow.domain.member.exception.*;
 import com.taskflow.domain.member.repository.MemberRepository;
 import com.taskflow.domain.member.service.MemberService;
-import com.taskflow.global.annotation.LogActivity;
+//import com.taskflow.global.annotation.LogActivity;
 import com.taskflow.global.config.PasswordEncoder;
 import com.taskflow.global.util.JwtUtil;
 import lombok.RequiredArgsConstructor;

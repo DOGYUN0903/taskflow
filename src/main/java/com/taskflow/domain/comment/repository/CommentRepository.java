@@ -18,5 +18,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     // 댓글 내용에 대한 Like 검색
     List<Comment> findByContentIsLike(String keyword);
 
-    Page<Comment> findAllByTaskIdOrderByCreatedAtDesc(Long taskId, Pageable pageable);
+    //Page<Comment> findAllByTaskIdOrderByCreatedAtDesc(Long taskId, Pageable pageable);
+
+    Page<Comment> findAllByTaskIdAndIsDeletedOrderByCreatedAtDesc(Long taskId, boolean is_deleted, Pageable pageable);
 }

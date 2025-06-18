@@ -1,20 +1,19 @@
 package com.taskflow.domain.comment.service;
 
 import com.taskflow.domain.comment.dto.CommentRequestDto;
-import com.taskflow.domain.comment.dto.CommentResponseDto;
-
-import java.util.List;
+import com.taskflow.domain.comment.dto.CreateCommentResponseDto;
+import com.taskflow.domain.comment.dto.SearchCommentResponseDto;
 
 public interface CommentService {
-    CommentResponseDto createComment(Long taskId, CommentRequestDto requestDto, String email);
+    CreateCommentResponseDto createComment(Long taskId, CommentRequestDto requestDto, String email);
     /*
     CommentResponseDto updateComment(Long id, CommentRequestDto requestDto, String email);
     */
 
-    void deleteComment(Long id, String email);
+    void deleteComment(Long id, String email, Long taskId);
 
-    List<CommentResponseDto> getCommentsByTaskId(Long taskId, int page, int size);
+    SearchCommentResponseDto getCommentsByTaskId(Long taskId, int page, int size);
 
-    List<CommentResponseDto> searchComments(String keyword);
+    //List<CommentResponseDto> searchComments(String keyword);
 
 }
