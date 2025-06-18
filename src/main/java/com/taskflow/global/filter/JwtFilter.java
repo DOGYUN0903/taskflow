@@ -24,7 +24,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
     // 필터링 필요없는 URI 배열
     // 회원가입, 로그인
-    private static final String[] FILTER_PASS_URI = {"/api/auth/login", "/api/auth/signup"};
+    private static final String[] FILTER_PASS_URI = {"/api/auth/login", "/api/auth/register"};
     private final CustomUserDetailsService customUserDetailsService;
 
     //필터링

@@ -1,4 +1,4 @@
-package com.taskflow.global.exception.member;
+package com.taskflow.domain.member.exception;
 
 import com.taskflow.global.exception.CustomException;
 import com.taskflow.global.response.error.MemberError;
