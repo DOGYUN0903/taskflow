@@ -65,12 +65,11 @@ public class Task {
     }
 
     public void update(String title, String description, TaskPriority priority, TaskStatus status,
-                       LocalDateTime startDate, LocalDateTime dueDate, Member assignee) {
+                       LocalDateTime dueDate, Member assignee) {
         this.title = title;
         this.description = description;
         this.priority = priority;
         this.status = status;
-        this.startDate = startDate;
         this.dueDate = dueDate;
         this.manager = assignee;
         this.updatedAt = LocalDateTime.now();
