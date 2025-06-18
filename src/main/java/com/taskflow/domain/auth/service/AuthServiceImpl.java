@@ -1,5 +1,6 @@
 package com.taskflow.domain.auth.service;
 
+import com.taskflow.domain.activitylog.entity.ActivityType;
 import com.taskflow.domain.auth.dto.login.LoginRequestDto;
 import com.taskflow.domain.auth.dto.login.LoginResponseDto;
 import com.taskflow.domain.auth.dto.signup.SignupRequestDto;
@@ -7,6 +8,7 @@ import com.taskflow.domain.auth.dto.signup.SignupResponseDto;
 import com.taskflow.domain.member.entity.Member;
 import com.taskflow.domain.member.entity.UserRole;
 import com.taskflow.domain.member.repository.MemberRepository;
+import com.taskflow.global.annotation.LogActivity;
 import com.taskflow.global.config.PasswordEncoder;
 import com.taskflow.global.exception.member.MemberEmailDuplicateException;
 import com.taskflow.global.exception.member.MemberNotFoundException;
@@ -42,15 +44,13 @@ public class AuthServiceImpl implements AuthService {
         //TODO: 비밀번호 암호화 로직 추가
         String encodedPassword = passwordEncoder.encode(requestDto.getPassword());
 
-        UserRole userRole = UserRole.of(requestDto.getUserRole());
-
         // member 객체 생성
         Member member = Member.builder()
                 .username(requestDto.getUsername())
                 .email(requestDto.getEmail())
                 .password(encodedPassword)
                 .name(requestDto.getName())
-                .userRole(userRole)
+                .userRole(UserRole.USER)
                 .is_deleted(false)
                 .build();
 
@@ -60,11 +60,12 @@ public class AuthServiceImpl implements AuthService {
         return new SignupResponseDto(savedMember);
     }
 
-    @Transactional(readOnly = true)
+    @LogActivity(ActivityType.USER_LOGGED_IN)
+    @Transactional
     @Override
     public LoginResponseDto login(LoginRequestDto requestDto) {
-        // 이메일 중복 검증 + 탈퇴한 사용자 검증
-        Member findMember = getActiveMemberByEmail(requestDto.getEmail());
+        // 아이디 중복 검증 + 탈퇴한 사용자 검증
+        Member findMember = getActiveMemberByUsername(requestDto.getUsername());
 
         // 비밀번호 검증하기
         if (!passwordEncoder.matches(requestDto.getPassword(), findMember.getPassword())) {
@@ -80,8 +81,8 @@ public class AuthServiceImpl implements AuthService {
 
     // 이메일로 회원을 조회하고, 탈퇴하지 않은 사용자만 반환합니다.
     // 조건에 맞는 사용자가 없다면 예외(MemberNotFoundException)를 발생시킵니다.
-    private Member getActiveMemberByEmail(String email) {
-        return memberRepository.findByEmail(email)
+    private Member getActiveMemberByUsername(String username) {
+        return memberRepository.findByUsername(username)
                 .filter(member -> !Boolean.TRUE.equals(member.getIs_deleted())) // 조회된 회원이 '삭제되지 않은 상태'인지 확인
                 .orElseThrow(() -> new MemberNotFoundException()); // 조건에 맞는 회원이 없다면 예외 발생
     }

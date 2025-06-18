@@ -18,11 +18,4 @@ public enum UserRole {
     public String getRole() {
         return role;
     }
-
-    public static UserRole of(String role) {
-        return Arrays.stream(UserRole.values())
-                .filter(r -> r.name().equalsIgnoreCase(role))
-                .findFirst()
-                .orElseThrow(() -> new MemberInvalidRoleException());
-    }
 }

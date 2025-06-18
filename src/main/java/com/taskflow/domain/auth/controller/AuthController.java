@@ -20,7 +20,7 @@ public class AuthController {
     private final AuthService authService;
 
     // 회원가입 API
-    @PostMapping("/signup")
+    @PostMapping("/register")
     public ResponseEntity<ApiResponse<SignupResponseDto>> signup(@Valid @RequestBody SignupRequestDto requestDto) {
         return ResponseEntity
                 .status(AuthSuccess.SIGN_UP.getStatus())
