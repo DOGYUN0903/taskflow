@@ -1,8 +1,6 @@
 package com.taskflow.domain.task.controller;
 
-import com.taskflow.domain.task.dto.TaskCreateRequest;
-import com.taskflow.domain.task.dto.TaskUpdateRequest;
-import com.taskflow.domain.task.dto.TaskResponse;
+import com.taskflow.domain.task.dto.*;
 import com.taskflow.domain.task.enums.TaskStatus;
 import com.taskflow.domain.task.service.TaskService;
 import com.taskflow.global.common.ApiResponse;
@@ -13,7 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -26,31 +23,38 @@ public class TaskController {
      * 일정 생성
      */
     @PostMapping
-    public ResponseEntity<ApiResponse<Void>> createTask(@RequestBody @Valid TaskCreateRequest request,
-                                                        @RequestParam String creatorEmail) {
-        taskService.createTask(request, creatorEmail);
+    public ResponseEntity<ApiResponse<TaskDetailResponse>> createTask(
+            @RequestBody @Valid TaskCreateRequest request,
+            @RequestParam String creatorEmail) {
+
+        TaskDetailResponse response = taskService.createTask(request, creatorEmail);
+
         return ResponseEntity
                 .status(TaskSuccess.TASK_CREATED_SUCCESS.getStatus())
-                .body(ApiResponse.success(TaskSuccess.TASK_CREATED_SUCCESS.getMessage()));
+                .body(ApiResponse.success(TaskSuccess.TASK_CREATED_SUCCESS.getMessage(), response));
     }
 
     /**
-     * 칸반 보드용 일정 목록 조회 (상태별 그룹핑)
+     * 일정 전체 조회 (검색/필터/페이징)
      */
     @GetMapping
-    public ResponseEntity<ApiResponse<Map<TaskStatus, List<TaskResponse>>>> getTasksGroupedByStatus() {
-        Map<TaskStatus, List<TaskResponse>> kanbanData = taskService.getTasksByStatusGrouped();
+    public ResponseEntity<ApiResponse<List<TaskResponse>>> getTasks(@RequestParam(required = false) TaskStatus status,
+                                                                    @RequestParam(required = false) Integer page,
+                                                                    @RequestParam(required = false) Integer size,
+                                                                    @RequestParam(required = false) String search,
+                                                                    @RequestParam(required = false) Long assigneeId) {
+        List<TaskResponse> responseList = taskService.getTasks(status, page, size, search, assigneeId);
         return ResponseEntity
                 .status(TaskSuccess.TASK_READ_SUCCESS.getStatus())
-                .body(ApiResponse.success(TaskSuccess.TASK_READ_SUCCESS.getMessage(), kanbanData));
+                .body(ApiResponse.success(TaskSuccess.TASK_READ_SUCCESS.getMessage(), responseList));
     }
 
     /**
      * 일정 단건 조회
      */
     @GetMapping("/{taskId}")
-    public ResponseEntity<ApiResponse<TaskResponse>> getTaskById(@PathVariable Long taskId) {
-        TaskResponse response = taskService.getTaskById(taskId);
+    public ResponseEntity<ApiResponse<TaskDetailResponse>> getTaskById(@PathVariable Long taskId) {
+        TaskDetailResponse response = taskService.getTaskById(taskId);
         return ResponseEntity
                 .status(TaskSuccess.TASK_READ_ONE_SUCCESS.getStatus())
                 .body(ApiResponse.success(TaskSuccess.TASK_READ_ONE_SUCCESS.getMessage(), response));
@@ -59,14 +63,32 @@ public class TaskController {
     /**
      * 일정 수정
      */
-    @PatchMapping("/{taskId}")
-    public ResponseEntity<ApiResponse<Void>> updateTask(@PathVariable Long taskId,
-                                                        @RequestBody @Valid TaskUpdateRequest request,
-                                                        @RequestParam String requesterEmail) {
-        taskService.updateTask(taskId, request, requesterEmail);
+    @PutMapping("/{taskId}")
+    public ResponseEntity<ApiResponse<TaskDetailResponse>> updateTask(
+            @PathVariable Long taskId,
+            @RequestBody @Valid TaskUpdateRequest request,
+            @RequestParam String requesterEmail) {
+
+        TaskDetailResponse response = taskService.updateTask(taskId, request, requesterEmail);
+
         return ResponseEntity
                 .status(TaskSuccess.TASK_UPDATED_SUCCESS.getStatus())
-                .body(ApiResponse.success(TaskSuccess.TASK_UPDATED_SUCCESS.getMessage()));
+                .body(ApiResponse.success(TaskSuccess.TASK_UPDATED_SUCCESS.getMessage(), response));
+    }
+
+    /**
+     * 일정 상태만 업데이트
+     */
+    @PatchMapping("/{taskId}/status")
+    public ResponseEntity<ApiResponse<TaskDetailResponse>> updateTaskStatus(
+            @PathVariable Long taskId,
+            @RequestBody @Valid TaskStatusUpdateRequest request) {
+
+        TaskDetailResponse response = taskService.updateTaskStatus(taskId, request.getStatus());
+
+        return ResponseEntity
+                .status(TaskSuccess.TASK_UPDATED_SUCCESS.getStatus())
+                .body(ApiResponse.success(TaskSuccess.TASK_UPDATED_SUCCESS.getMessage(), response));
     }
 
     /**
@@ -80,36 +102,3 @@ public class TaskController {
                 .body(ApiResponse.success(TaskSuccess.TASK_DELETED_SUCCESS.getMessage()));
     }
 }
-
-
-/**
- * 일정 제목 키워드 조회 (GET + 페이징)
- * 추후 검색 기능
- */
-    /*
-    @GetMapping(params = {"pageNumber", "size", "title"})
-    public ResponseEntity<List<TaskResponse>> getTasksByTitle(@RequestParam int pageNumber,
-                                                              @RequestParam int size,
-                                                              @RequestParam String title) {
-        var page = taskService.getTasksByTitle(title, pageNumber, size);
-        return ResponseEntity.status(HttpStatus.FOUND)
-                .body(page.getContent());
-    }
-
-    */
-
-/**
- * 일정 설명 키워드 조회 (POST + 페이징)
- * 추후 검색 기능
- */
-    /*
-    @PostMapping(params = {"pageNumber", "size"})
-    public ResponseEntity<List<TaskResponse>> getTasksByDescription(@RequestBody Map<String, String> body,
-                                                                    @RequestParam int pageNumber,
-                                                                    @RequestParam int size) {
-        String description = body.get("description");
-        var page = taskService.getTasksByDescription(description, pageNumber, size);
-        return ResponseEntity.status(HttpStatus.FOUND)
-                .body(page.getContent());
-    }
-    */

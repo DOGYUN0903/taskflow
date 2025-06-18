@@ -3,43 +3,23 @@ package com.taskflow.domain.task.entity;
 import com.taskflow.domain.member.entity.Member;
 import com.taskflow.domain.task.enums.TaskPriority;
 import com.taskflow.domain.task.enums.TaskStatus;
-import com.taskflow.global.common.BaseEntity;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-/**
- * 일정(Task) 엔티티
- */
 @Entity
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
-@Builder
-public class Task extends BaseEntity {
+@NoArgsConstructor
+public class Task {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /**
-     * 일정 작성자 (회원)
-     */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "creator_id", nullable = false)
-    private Member creator;
-
-    /**
-     * 일정 담당자 (회원)
-     */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "manager_id", nullable = false)
-    private Member manager;
-
     private String title;
 
-    @Column(columnDefinition = "TEXT")
     private String description;
 
     @Enumerated(EnumType.STRING)
@@ -48,35 +28,62 @@ public class Task extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private TaskStatus status;
 
-    private LocalDateTime dueDate;
-
     private LocalDateTime startDate;
 
-    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT false")
-    private Boolean isDeleted;
+    private LocalDateTime dueDate;
+
+    private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
+
+    private boolean isDeleted;
 
     private LocalDateTime deletedAt;
 
-    /**
-     * 일정 수정
-     */
-    public void update(String title, String description, TaskPriority priority, TaskStatus status,
-                       LocalDateTime dueDate, LocalDateTime startDate, Member manager) {
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "creator_id")
+    private Member creator;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "manager_id")
+    private Member manager;
+
+    public Task(String title, String description, TaskPriority priority, TaskStatus status,
+                LocalDateTime dueDate, Member creator, Member assignee) {
         this.title = title;
         this.description = description;
         this.priority = priority;
         this.status = status;
         this.dueDate = dueDate;
-        this.startDate = startDate;
-        this.manager = manager;
+        this.creator = creator;
+        this.manager = assignee;
+        this.isDeleted = false;
+        this.startDate = null;
+        this.deletedAt = null;
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
 
+    public void update(String title, String description, TaskPriority priority, TaskStatus status,
+                       LocalDateTime startDate, LocalDateTime dueDate, Member assignee) {
+        this.title = title;
+        this.description = description;
+        this.priority = priority;
+        this.status = status;
+        this.startDate = startDate;
+        this.dueDate = dueDate;
+        this.manager = assignee;
+        this.updatedAt = LocalDateTime.now();
+    }
 
-    /**
-     * Soft delete
-     */
-    public void softDelete() {
+    public void changeStatus(TaskStatus status) {
+        this.status = status;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void delete() {
         this.isDeleted = true;
         this.deletedAt = LocalDateTime.now();
     }
+
 }

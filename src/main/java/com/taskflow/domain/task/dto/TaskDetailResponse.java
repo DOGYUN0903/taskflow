@@ -8,19 +8,15 @@ import lombok.Getter;
 
 import java.time.LocalDateTime;
 
-/**
- * 일정 전체 조회 응답을 위한 DTO 클래스
- * 클라이언트에게 일정 목록 조회 결과를 반환할 때 사용
- */
 @Getter
-public class TaskResponse {
+public class TaskDetailResponse {
 
     private Long id;
     private String title;
     private String description;
-    private LocalDateTime dueDate;
     private TaskPriority priority;
     private TaskStatus status;
+    private LocalDateTime dueDate;
 
     private Long assigneeId;
     private MemberInfoResponse assignee;
@@ -28,17 +24,16 @@ public class TaskResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public TaskResponse(Task task) {
+    public TaskDetailResponse(Task task) {
         this.id = task.getId();
         this.title = task.getTitle();
         this.description = task.getDescription();
-        this.dueDate = task.getDueDate();
         this.priority = task.getPriority();
         this.status = task.getStatus();
-        this.assigneeId = task.getManager().getId(); // 💡 연관관계에서 manager로 변경된 점 주의!
-        this.assignee = new MemberInfoResponse(task.getManager());
+        this.dueDate = task.getDueDate();
+        this.assigneeId = task.getManager().getId(); // 연관된 Member 객체에서 ID 추출
+        this.assignee = new MemberInfoResponse(task.getManager()); // 전체 정보 DTO로 구성
         this.createdAt = task.getCreatedAt();
         this.updatedAt = task.getUpdatedAt();
     }
 }
-

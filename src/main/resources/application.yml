@@ -1,12 +1,12 @@
-server:
-  port: 8080
+port:
+  ${SERVER_PORT}
 
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/taskflow?serverTimezone=Asia/Seoul
-    username: root
-    password: Akal1024!
+    url: jdbc:mysql://localhost:${MYSQL_PORT}/${MYSQL_DBNAME}?serverTimezone=Asia/Seoul
+    username: ${MYSQL_USERNAME}
+    password: ${MYSQL_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: update
@@ -18,4 +18,4 @@ spring:
         dialect: org.hibernate.dialect.MySQLDialect
 
 jwt:
-  secret: SecretKeyExample42534D@DAF!1243zvjnjw@
+  secret: ${JWT_SECRET_KEY}

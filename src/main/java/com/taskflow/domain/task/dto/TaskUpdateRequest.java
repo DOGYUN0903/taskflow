@@ -17,13 +17,20 @@ public class TaskUpdateRequest {
 
     @NotBlank(message = "제목은 필수 입력해주세요.")
     private String title;
+
     private String description;
+
+    @NotNull(message = "우선순위를 선택해주세요.")
     private TaskPriority priority;
-    @NotBlank(message = "담당자 지정은 필수입니다.")
-    private String managerName;
+
+    @NotNull(message = "담당자 ID는 필수입니다.")
+    private Long assigneeId;
+
+    @NotNull(message = "상태를 선택해주세요.")
     private TaskStatus status;
 
     private LocalDateTime startDate;
+
     @NotNull(message = "마감일은 필수로 지정해야 합니다.")
     private LocalDateTime dueDate;
 }

@@ -3,9 +3,6 @@ package com.taskflow.domain.task.exception;
 import com.taskflow.global.exception.CustomException;
 import org.springframework.http.HttpStatus;
 
-/**
- * 존재하지 않는 Task를 조회/수정/삭제하려 할 때 발생하는 예외
- */
 public class TaskNotFoundException extends CustomException {
 
     @Override
@@ -15,6 +12,6 @@ public class TaskNotFoundException extends CustomException {
 
     @Override
     public String getErrorMessage() {
-        return "해당 일정을 찾을 수 없습니다.";
+        return "해당 일정(Task)을 찾을 수 없습니다.";
     }
 }

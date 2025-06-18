@@ -3,15 +3,15 @@ package com.taskflow.domain.task.exception;
 import com.taskflow.global.exception.CustomException;
 import org.springframework.http.HttpStatus;
 
-public class PastDueDateException extends CustomException {
+public class CreatorNotFoundException extends CustomException {
 
     @Override
     public HttpStatus getStatus() {
-        return HttpStatus.BAD_REQUEST;
+        return HttpStatus.NOT_FOUND;
     }
 
     @Override
     public String getErrorMessage() {
-        return "마감일은 현재 시간보다 이후여야 합니다.";
+        return "생성자 이메일에 해당하는 사용자를 찾을 수 없습니다.";
     }
 }
