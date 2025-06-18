@@ -19,6 +19,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+/**
+ * 일정(Task) 도메인의 비즈니스 로직을 처리하는 서비스 클래스
+ */
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -27,6 +30,13 @@ public class TaskService {
     private final TaskRepository taskRepository;
     private final MemberRepository memberRepository;
 
+    /**
+     * 일정 생성
+     *
+     * @param request 일정 생성 요청 데이터
+     * @param creatorEmail 생성자 이메일
+     * @return 생성된 일정 상세 정보
+     */
     public TaskDetailResponse createTask(TaskCreateRequest request, String creatorEmail) {
         Member creator = memberRepository.findByEmail(creatorEmail)
                 .orElseThrow(CreatorNotFoundException::new);
@@ -49,7 +59,15 @@ public class TaskService {
     }
 
     /**
-     * 일정 전체 조회: 검색, 상태, 담당자 필터 + 페이징 처리
+     * 일정 전체 조회
+     * 상태, 키워드, 담당자 ID 필터링 및 페이징 처리 포함
+     *
+     * @param status 필터링할 일정 상태
+     * @param page 페이지 번호
+     * @param size 페이지 크기
+     * @param search 제목 또는 설명 키워드
+     * @param assigneeId 담당자 ID
+     * @return 페이징된 일정 리스트 응답
      */
     @Transactional(readOnly = true)
     public TaskPageResponse getTasks(TaskStatus status, Integer page, Integer size, String search, Long assigneeId) {
@@ -64,17 +82,17 @@ public class TaskService {
                     return task.getTitle().toLowerCase().contains(keyword)
                             || task.getDescription().toLowerCase().contains(keyword);
                 })
-                .filter(task -> assigneeId == null || Objects.equals(task.getManager().getId(), assigneeId))
+                .filter(task -> assigneeId == null || Objects.equals(task.getAssignee().getId(), assigneeId))
                 .collect(Collectors.toList());
 
-        // 예외 처리
+        // 결과 없음 처리
         if (filtered.isEmpty()) {
             if (search != null) throw new TaskNotFoundException(TaskError.TASK_NOT_FOUND_BY_SEARCH);
             if (assigneeId != null) throw new TaskNotFoundException(TaskError.TASK_NOT_FOUND_BY_ASSIGNEE);
-            throw new TaskNotFoundException(); // 기본 메시지
+            throw new TaskNotFoundException();
         }
 
-        // 페이징 처리
+        // 페이징
         int start = (page != null && size != null) ? page * size : 0;
         int end = (size != null) ? Math.min(start + size, filtered.size()) : filtered.size();
         List<TaskResponse> paged = filtered.subList(start, end).stream()
@@ -90,14 +108,26 @@ public class TaskService {
         );
     }
 
-
-
+    /**
+     * 일정 단건 조회
+     *
+     * @param taskId 조회할 일정 ID
+     * @return 일정 상세 정보
+     */
     public TaskDetailResponse getTaskById(Long taskId) {
         Task task = taskRepository.findByIdAndIsDeletedFalse(taskId)
                 .orElseThrow(TaskNotFoundException::new);
         return new TaskDetailResponse(task);
     }
 
+    /**
+     * 일정 수정
+     *
+     * @param taskId 수정 대상 일정 ID
+     * @param request 수정 요청 데이터
+     * @param requesterEmail 요청자 이메일
+     * @return 수정된 일정 상세 정보
+     */
     public TaskDetailResponse updateTask(Long taskId, TaskUpdateRequest request, String requesterEmail) {
         Task task = taskRepository.findByIdAndIsDeletedFalse(taskId)
                 .orElseThrow(TaskNotFoundException::new);
@@ -117,12 +147,24 @@ public class TaskService {
         return new TaskDetailResponse(task);
     }
 
+    /**
+     * 일정 삭제
+     *
+     * @param taskId 삭제할 일정 ID
+     */
     public void deleteTask(Long taskId) {
         Task task = taskRepository.findByIdAndIsDeletedFalse(taskId)
                 .orElseThrow(TaskNotFoundException::new);
         task.delete();
     }
 
+    /**
+     * 일정 상태만 변경
+     *
+     * @param taskId 대상 일정 ID
+     * @param status 변경할 상태
+     * @return 상태가 변경된 일정 상세 정보
+     */
     public TaskDetailResponse updateTaskStatus(Long taskId, TaskStatus status) {
         Task task = taskRepository.findByIdAndIsDeletedFalse(taskId)
                 .orElseThrow(TaskNotFoundException::new);

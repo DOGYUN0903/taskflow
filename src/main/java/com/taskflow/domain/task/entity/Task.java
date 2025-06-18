@@ -9,45 +9,91 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+/**
+ * 일정(Task) 도메인 엔티티
+ * 업무 제목, 설명, 상태, 우선순위, 생성자 및 담당자 등 핵심 정보를 포함
+ */
 @Entity
 @Getter
 @NoArgsConstructor
 public class Task {
 
+    /**
+     * 일정 고유 ID
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /**
+     * 일정 제목
+     */
     private String title;
 
+    /**
+     * 일정 설명
+     */
     private String description;
 
+    /**
+     * 우선순위 (LOW, MEDIUM, HIGH)
+     */
     @Enumerated(EnumType.STRING)
     private TaskPriority priority;
 
+    /**
+     * 상태 (TODO, IN_PROGRESS, DONE 등)
+     */
     @Enumerated(EnumType.STRING)
     private TaskStatus status;
 
+    /**
+     * 시작일 (선택값)
+     */
     private LocalDateTime startDate;
 
+    /**
+     * 마감일
+     */
     private LocalDateTime dueDate;
 
+    /**
+     * 생성일
+     */
     private LocalDateTime createdAt;
 
+    /**
+     * 수정일
+     */
     private LocalDateTime updatedAt;
 
+    /**
+     * 삭제 여부 플래그
+     */
     private boolean isDeleted;
 
+    /**
+     * 삭제일시
+     */
     private LocalDateTime deletedAt;
 
+    /**
+     * 일정 생성자
+     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "creator_id")
     private Member creator;
 
+    /**
+     * 일정 담당자
+     */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "manager_id")
-    private Member manager;
+    @JoinColumn(name = "assignee_id")
+    private Member assignee;
 
+    /**
+     * 일정 생성자
+     */
     public Task(String title, String description, TaskPriority priority, TaskStatus status,
                 LocalDateTime dueDate, Member creator, Member assignee) {
         this.title = title;
@@ -56,7 +102,7 @@ public class Task {
         this.status = status;
         this.dueDate = dueDate;
         this.creator = creator;
-        this.manager = assignee;
+        this.assignee = assignee;
         this.isDeleted = false;
         this.startDate = null;
         this.deletedAt = null;
@@ -64,6 +110,9 @@ public class Task {
         this.updatedAt = LocalDateTime.now();
     }
 
+    /**
+     * 일정 정보 수정
+     */
     public void update(String title, String description, TaskPriority priority, TaskStatus status,
                        LocalDateTime dueDate, Member assignee) {
         this.title = title;
@@ -71,18 +120,23 @@ public class Task {
         this.priority = priority;
         this.status = status;
         this.dueDate = dueDate;
-        this.manager = assignee;
+        this.assignee = assignee;
         this.updatedAt = LocalDateTime.now();
     }
 
+    /**
+     * 일정 상태 변경
+     */
     public void changeStatus(TaskStatus status) {
         this.status = status;
         this.updatedAt = LocalDateTime.now();
     }
 
+    /**
+     * 일정 삭제 처리
+     */
     public void delete() {
         this.isDeleted = true;
         this.deletedAt = LocalDateTime.now();
     }
-
 }
