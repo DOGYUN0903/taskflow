@@ -17,7 +17,7 @@ public class Member extends BaseEntity {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private String username; // 닉네임
+    private String username; // 사용자 아이디
 
     @Email
     @Column(nullable = false, unique = true)

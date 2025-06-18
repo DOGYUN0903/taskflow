@@ -8,7 +8,8 @@ public enum MemberError {
     INVALID_ROLE(HttpStatus.BAD_REQUEST, "유효하지 않은 사용자 역할입니다."),
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 회원이거나 탈퇴한 회원입니다."),
     IS_DELETED(HttpStatus.BAD_REQUEST, "이미 탈퇴한 회원입니다."),
-    PASSWORD_MISS_MATCH(HttpStatus.UNAUTHORIZED, "비밀번호가 일치하지 않습니다.");
+    INVALID_PASSWORD(HttpStatus.UNAUTHORIZED, "비밀번호가 일치하지 않습니다."),
+    EMAIL_USERNAME_DUPLICATE(HttpStatus.BAD_REQUEST, "이메일과 아이디는 동일할 수 없습니다.");
 
     private final HttpStatus status;
     private final String errorMessage;

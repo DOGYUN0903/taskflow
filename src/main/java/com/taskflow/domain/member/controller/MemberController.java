@@ -11,27 +11,18 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/members")
+@RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class MemberController {
 
     private final MemberService memberService;
 
-    @GetMapping("/profile")
+    @GetMapping("/me")
     public ResponseEntity<ApiResponse<MemberProfileResponseDto>> getMemberProfile(@AuthenticationPrincipal CustomUserDetails userDetails) {
         Long memberId = userDetails.getId();
 
         return ResponseEntity
                 .status(MemberSuccess.PROFILE_READ.getStatus())
                 .body(ApiResponse.success(MemberSuccess.PROFILE_READ.getMessage(), memberService.getMemberProfile(memberId)));
-    }
-
-    @DeleteMapping("/withdraw")
-    public ResponseEntity<ApiResponse<Void>> withdrawMember(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        Long memberId = userDetails.getId();
-        memberService.withdrawMember(memberId);
-        return ResponseEntity
-                .status(MemberSuccess.WITHDRAW.getStatus())
-                .body(ApiResponse.success(MemberSuccess.WITHDRAW.getMessage()));
     }
 }

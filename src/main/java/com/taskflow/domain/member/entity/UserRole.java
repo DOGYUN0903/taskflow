@@ -1,9 +1,5 @@
 package com.taskflow.domain.member.entity;
 
-import com.taskflow.global.exception.member.MemberInvalidRoleException;
-
-import java.util.Arrays;
-
 public enum UserRole {
     USER("ROLE_USER"),
     ADMIN("ROLE_ADMIN");
