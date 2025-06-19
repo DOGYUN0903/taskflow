@@ -4,10 +4,12 @@ import com.taskflow.domain.task.dto.*;
 import com.taskflow.domain.task.enums.TaskStatus;
 import com.taskflow.domain.task.service.TaskService;
 import com.taskflow.global.common.ApiResponse;
+import com.taskflow.global.config.customUserDetails.Entity.CustomUserDetails;
 import com.taskflow.global.response.success.TaskSuccess;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -24,15 +26,15 @@ public class TaskController {
      * 새로운 일정을 생성합니다.
      *
      * @param request       일정 생성 요청 DTO
-     * @param creatorEmail  생성자의 이메일
-     * @return 생성된 일정 정보와 응답 메시지
+     * @param userDetails   로그인한 사용자 정보
+     * @return 생성된 일정 정보가 포함된 응답
      */
     @PostMapping
     public ResponseEntity<ApiResponse<TaskDetailResponse>> createTask(
             @RequestBody @Valid TaskCreateRequest request,
-            @RequestParam String creatorEmail) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        TaskDetailResponse response = taskService.createTask(request, creatorEmail);
+        TaskDetailResponse response = taskService.createTask(request, userDetails.getId());
 
         return ResponseEntity
                 .status(TaskSuccess.TASK_CREATED_SUCCESS.getStatus())
@@ -80,18 +82,18 @@ public class TaskController {
     /**
      * 일정을 수정합니다.
      *
-     * @param taskId         수정할 일정 ID
-     * @param request        일정 수정 요청 DTO
-     * @param requesterEmail 요청자의 이메일
-     * @return 수정된 일정 정보
+     * @param taskId             수정할 일정의 ID
+     * @param request            일정 수정 요청 DTO
+     * @param customUserDetails  로그인한 사용자 정보
+     * @return 수정된 일정 정보 응답
      */
     @PutMapping("/{taskId}")
     public ResponseEntity<ApiResponse<TaskDetailResponse>> updateTask(
             @PathVariable Long taskId,
             @RequestBody @Valid TaskUpdateRequest request,
-            @RequestParam String requesterEmail) {
+            @AuthenticationPrincipal CustomUserDetails customUserDetails) {
 
-        TaskDetailResponse response = taskService.updateTask(taskId, request, requesterEmail);
+        TaskDetailResponse response = taskService.updateTask(taskId, request, customUserDetails.getId());
 
         return ResponseEntity
                 .status(TaskSuccess.TASK_UPDATED_SUCCESS.getStatus())
