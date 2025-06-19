@@ -19,8 +19,8 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
- * 일정(Task) 도메인의 비즈니스 로직을 처리하는 서비스 클래스입니다.
- * 일정 생성, 조회, 수정, 삭제, 상태 변경 기능을 제공합니다.
+ * TaskService는 일정(Task) 도메인의 핵심 비즈니스 로직을 담당하는 서비스 클래스
+ * 일정 생성, 조회, 수정, 삭제, 상태 변경 기능 제공
  */
 @Service
 @RequiredArgsConstructor
@@ -31,11 +31,11 @@ public class TaskService {
     private final MemberRepository memberRepository;
 
     /**
-     * 일정을 생성합니다.
+     * 일정을 생성하는 서비스 로직
      *
-     * @param request   일정 생성 요청 DTO
-     * @param memberId  생성자 회원 ID
-     * @return 생성된 일정 상세 정보 DTO
+     * @param request  일정 생성 요청 DTO
+     * @param memberId 생성자 회원 ID
+     * @return 생성된 일정 상세 응답 DTO
      */
     public TaskDetailResponse createTask(TaskCreateRequest request, Long memberId) {
         Member creator = memberRepository.findById(memberId)
@@ -59,21 +59,20 @@ public class TaskService {
     }
 
     /**
-     * 일정 전체 조회
-     * 상태, 키워드, 담당자 ID 필터링 및 페이징 처리 포함
+     * 일정 목록을 조회하는 서비스 로직
+     * 상태, 키워드, 담당자 ID 필터링 및 페이징 처리 지원
      *
-     * @param status 필터링할 일정 상태
-     * @param page 페이지 번호
-     * @param size 페이지 크기
-     * @param search 제목 또는 설명 키워드
+     * @param status     일정 상태
+     * @param page       페이지 번호
+     * @param size       페이지 크기
+     * @param search     검색 키워드
      * @param assigneeId 담당자 ID
-     * @return 페이징된 일정 리스트 응답
+     * @return 페이징 처리된 일정 목록 응답 DTO
      */
     @Transactional(readOnly = true)
     public TaskPageResponse getTasks(TaskStatus status, Integer page, Integer size, String search, Long assigneeId) {
         List<Task> tasks = taskRepository.findAllByIsDeletedFalse();
 
-        // 필터링
         List<Task> filtered = tasks.stream()
                 .filter(task -> status == null || task.getStatus() == status)
                 .filter(task -> {
@@ -85,7 +84,6 @@ public class TaskService {
                 .filter(task -> assigneeId == null || Objects.equals(task.getAssignee().getId(), assigneeId))
                 .collect(Collectors.toList());
 
-        // 결과가 없을 경우 - 일부 조건만 예외 처리
         if (filtered.isEmpty()) {
             if (search != null) {
                 throw new TaskNotFoundException(TaskError.TASK_NOT_FOUND_BY_SEARCH);
@@ -94,17 +92,14 @@ public class TaskService {
                 throw new TaskNotFoundException(TaskError.TASK_NOT_FOUND_BY_ASSIGNEE);
             }
 
-            // status만 조건이거나, 아예 조건 없을 경우엔 빈 결과 반환
             return new TaskPageResponse(
                     Collections.emptyList(),
-                    0,
-                    0,
+                    0, 0,
                     size != null ? size : 0,
                     page != null ? page : 0
             );
         }
 
-        // 페이징 계산
         int start = (page != null && size != null) ? page * size : 0;
         int end = (size != null) ? Math.min(start + size, filtered.size()) : filtered.size();
         List<TaskResponse> paged = filtered.subList(start, end).stream()
@@ -120,12 +115,11 @@ public class TaskService {
         );
     }
 
-
     /**
-     * 일정 단건 조회
+     * 일정 단건을 조회하는 서비스 로직
      *
      * @param taskId 조회할 일정 ID
-     * @return 일정 상세 정보
+     * @return 일정 상세 응답 DTO
      */
     public TaskDetailResponse getTaskById(Long taskId) {
         Task task = taskRepository.findByIdAndIsDeletedFalse(taskId)
@@ -134,13 +128,13 @@ public class TaskService {
     }
 
     /**
-     * 일정을 수정합니다. 생성자 또는 담당자만 수정 권한이 있으며,
-     * 상태는 유효한 순서 (TODO → IN_PROGRESS → DONE)로만 변경 가능합니다.
+     * 일정을 수정하는 서비스 로직
+     * 생성자 또는 담당자만 수정 가능하며, 상태 순서 유효성 검증 포함
      *
      * @param taskId   수정할 일정 ID
-     * @param request  일정 수정 요청 DTO
-     * @param memberId 로그인한 사용자 ID
-     * @return 수정된 일정 상세 정보 DTO
+     * @param request  수정 요청 DTO
+     * @param memberId 요청자 회원 ID
+     * @return 수정된 일정 상세 응답 DTO
      */
     public TaskDetailResponse updateTask(Long taskId, TaskUpdateRequest request, Long memberId) {
         Task task = taskRepository.findByIdAndIsDeletedFalse(taskId)
@@ -149,30 +143,29 @@ public class TaskService {
         Member assignee = memberRepository.findById(request.getAssigneeId())
                 .orElseThrow(AssigneeNotFoundException::new);
 
-        // 권한 확인: 요청자가 생성자 현재 할당된 담당자인지 확인
         if (!Objects.equals(task.getAssignee().getId(), memberId)
                 && !Objects.equals(task.getCreator().getId(), memberId)) {
             throw new UnauthorizedStatusChangeException();
         }
 
-
-
-        // 상태 순서 검증
         TaskStatus currentStatus = task.getStatus();
-        TaskStatus newStatus = request.getStatus();
+        TaskStatus newStatus = request.getStatus() != null ? request.getStatus() : currentStatus;
 
-        boolean validTransition =
-                (currentStatus == TaskStatus.TODO && newStatus == TaskStatus.IN_PROGRESS) ||
-                        (currentStatus == TaskStatus.IN_PROGRESS && newStatus == TaskStatus.DONE) ||
-                        (currentStatus == newStatus); // 같은 상태로는 허용
+        if (request.getStatus() != null) {
+            boolean validTransition =
+                    (currentStatus == TaskStatus.TODO && newStatus == TaskStatus.IN_PROGRESS) ||
+                            (currentStatus == TaskStatus.IN_PROGRESS && newStatus == TaskStatus.DONE) ||
+                            (currentStatus == newStatus);
 
-        if (!validTransition) {
-            throw new InvalidStatusTransitionException(); // 커스텀 예외
-        }
+            if (!validTransition) {
+                throw new InvalidStatusTransitionException();
+            }
 
-        // IN_PROGRESS 상태로 바뀔 때 시작일 기록
-        if (currentStatus != TaskStatus.IN_PROGRESS && newStatus == TaskStatus.IN_PROGRESS && task.getStartDate() == null) {
-            task.setStartDate(LocalDateTime.now());
+            if (currentStatus != TaskStatus.IN_PROGRESS
+                    && newStatus == TaskStatus.IN_PROGRESS
+                    && task.getStartDate() == null) {
+                task.setStartDate(LocalDateTime.now());
+            }
         }
 
         task.update(
@@ -188,9 +181,9 @@ public class TaskService {
     }
 
     /**
-     * 일정 삭제
+     * 일정을 삭제하는 서비스 로직 (Soft Delete 방식)
      *
-     * @param taskId 삭제할 일정 ID
+     * @param taskId 삭제 대상 일정 ID
      */
     public void deleteTask(Long taskId) {
         Task task = taskRepository.findByIdAndIsDeletedFalse(taskId)
@@ -199,19 +192,41 @@ public class TaskService {
     }
 
     /**
-     * 일정 상태만 변경
+     * 일정 상태만 별도로 변경하는 서비스 로직
+     * 생성자 또는 담당자만 변경 가능하며 상태 전이 순서 검증 포함
      *
-     * @param taskId 대상 일정 ID
-     * @param status 변경할 상태
-     * @return 상태가 변경된 일정 상세 정보
+     * @param taskId    일정 ID
+     * @param newStatus 변경할 상태
+     * @param memberId  요청자 회원 ID
+     * @return 상태가 변경된 일정 상세 응답 DTO
      */
-    public TaskDetailResponse updateTaskStatus(Long taskId, TaskStatus status) {
+    public TaskDetailResponse updateTaskStatus(Long taskId, TaskStatus newStatus, Long memberId) {
         Task task = taskRepository.findByIdAndIsDeletedFalse(taskId)
                 .orElseThrow(TaskNotFoundException::new);
-        if (status == null) {
-            throw new InvalidStatusException();
+
+        if (!Objects.equals(task.getAssignee().getId(), memberId)
+                && !Objects.equals(task.getCreator().getId(), memberId)) {
+            throw new UnauthorizedStatusChangeException();
         }
-        task.changeStatus(status);
+
+        TaskStatus currentStatus = task.getStatus();
+
+        boolean validTransition =
+                (currentStatus == TaskStatus.TODO && newStatus == TaskStatus.IN_PROGRESS) ||
+                        (currentStatus == TaskStatus.IN_PROGRESS && newStatus == TaskStatus.DONE) ||
+                        (currentStatus == newStatus);
+
+        if (!validTransition) {
+            throw new InvalidStatusTransitionException();
+        }
+
+        if (currentStatus != TaskStatus.IN_PROGRESS
+                && newStatus == TaskStatus.IN_PROGRESS
+                && task.getStartDate() == null) {
+            task.setStartDate(LocalDateTime.now());
+        }
+
+        task.changeStatus(newStatus);
         return new TaskDetailResponse(task);
     }
 }
