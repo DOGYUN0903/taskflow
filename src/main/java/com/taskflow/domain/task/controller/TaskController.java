@@ -1,8 +1,6 @@
 package com.taskflow.domain.task.controller;
 
-import com.taskflow.domain.task.dto.TaskCreateRequest;
-import com.taskflow.domain.task.dto.TaskUpdateRequest;
-import com.taskflow.domain.task.dto.TaskResponse;
+import com.taskflow.domain.task.dto.*;
 import com.taskflow.domain.task.enums.TaskStatus;
 import com.taskflow.domain.task.service.TaskService;
 import com.taskflow.global.common.ApiResponse;
@@ -12,9 +10,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Map;
-
+/**
+ * 일정(Task) 관련 요청을 처리하는 컨트롤러입니다.
+ */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/tasks")
@@ -23,54 +21,107 @@ public class TaskController {
     private final TaskService taskService;
 
     /**
-     * 일정 생성
+     * 새로운 일정을 생성합니다.
+     *
+     * @param request       일정 생성 요청 DTO
+     * @param creatorEmail  생성자의 이메일
+     * @return 생성된 일정 정보와 응답 메시지
      */
     @PostMapping
-    public ResponseEntity<ApiResponse<Void>> createTask(@RequestBody @Valid TaskCreateRequest request,
-                                                        @RequestParam String creatorEmail) {
-        taskService.createTask(request, creatorEmail);
+    public ResponseEntity<ApiResponse<TaskDetailResponse>> createTask(
+            @RequestBody @Valid TaskCreateRequest request,
+            @RequestParam String creatorEmail) {
+
+        TaskDetailResponse response = taskService.createTask(request, creatorEmail);
+
         return ResponseEntity
                 .status(TaskSuccess.TASK_CREATED_SUCCESS.getStatus())
-                .body(ApiResponse.success(TaskSuccess.TASK_CREATED_SUCCESS.getMessage()));
+                .body(ApiResponse.success(TaskSuccess.TASK_CREATED_SUCCESS.getMessage(), response));
     }
 
     /**
-     * 칸반 보드용 일정 목록 조회 (상태별 그룹핑)
+     * 일정 목록을 조회합니다. (필터, 검색, 페이징 지원)
+     *
+     * @param status      일정 상태 (예: TODO, IN_PROGRESS)
+     * @param page        페이지 번호
+     * @param size        페이지 크기
+     * @param search      검색 키워드
+     * @param assigneeId  담당자 ID
+     * @return 일정 목록 및 페이징 정보
      */
     @GetMapping
-    public ResponseEntity<ApiResponse<Map<TaskStatus, List<TaskResponse>>>> getTasksGroupedByStatus() {
-        Map<TaskStatus, List<TaskResponse>> kanbanData = taskService.getTasksByStatusGrouped();
+    public ResponseEntity<ApiResponse<TaskPageResponse>> getTasks(
+            @RequestParam(required = false) TaskStatus status,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Long assigneeId) {
+
+        TaskPageResponse response = taskService.getTasks(status, page, size, search, assigneeId);
         return ResponseEntity
                 .status(TaskSuccess.TASK_READ_SUCCESS.getStatus())
-                .body(ApiResponse.success(TaskSuccess.TASK_READ_SUCCESS.getMessage(), kanbanData));
+                .body(ApiResponse.success(TaskSuccess.TASK_READ_SUCCESS.getMessage(), response));
     }
 
     /**
-     * 일정 단건 조회
+     * 일정 단건을 조회합니다.
+     *
+     * @param taskId 조회할 일정의 ID
+     * @return 일정 상세 정보
      */
     @GetMapping("/{taskId}")
-    public ResponseEntity<ApiResponse<TaskResponse>> getTaskById(@PathVariable Long taskId) {
-        TaskResponse response = taskService.getTaskById(taskId);
+    public ResponseEntity<ApiResponse<TaskDetailResponse>> getTaskById(@PathVariable Long taskId) {
+        TaskDetailResponse response = taskService.getTaskById(taskId);
         return ResponseEntity
                 .status(TaskSuccess.TASK_READ_ONE_SUCCESS.getStatus())
                 .body(ApiResponse.success(TaskSuccess.TASK_READ_ONE_SUCCESS.getMessage(), response));
     }
 
     /**
-     * 일정 수정
+     * 일정을 수정합니다.
+     *
+     * @param taskId         수정할 일정 ID
+     * @param request        일정 수정 요청 DTO
+     * @param requesterEmail 요청자의 이메일
+     * @return 수정된 일정 정보
      */
-    @PatchMapping("/{taskId}")
-    public ResponseEntity<ApiResponse<Void>> updateTask(@PathVariable Long taskId,
-                                                        @RequestBody @Valid TaskUpdateRequest request,
-                                                        @RequestParam String requesterEmail) {
-        taskService.updateTask(taskId, request, requesterEmail);
+    @PutMapping("/{taskId}")
+    public ResponseEntity<ApiResponse<TaskDetailResponse>> updateTask(
+            @PathVariable Long taskId,
+            @RequestBody @Valid TaskUpdateRequest request,
+            @RequestParam String requesterEmail) {
+
+        TaskDetailResponse response = taskService.updateTask(taskId, request, requesterEmail);
+
         return ResponseEntity
                 .status(TaskSuccess.TASK_UPDATED_SUCCESS.getStatus())
-                .body(ApiResponse.success(TaskSuccess.TASK_UPDATED_SUCCESS.getMessage()));
+                .body(ApiResponse.success(TaskSuccess.TASK_UPDATED_SUCCESS.getMessage(), response));
     }
 
     /**
-     * 일정 삭제
+     * 일정 상태만 업데이트합니다.
+     *
+     * @param taskId 일정 ID
+     * @param request 상태 변경 요청 DTO
+     * @return 상태가 변경된 일정 정보
+     */
+    @PatchMapping("/{taskId}/status")
+    public ResponseEntity<ApiResponse<TaskDetailResponse>> updateTaskStatus(
+            @PathVariable Long taskId,
+            @RequestBody @Valid TaskStatusUpdateRequest request) {
+
+        TaskDetailResponse response = taskService.updateTaskStatus(taskId, request.getStatus());
+
+        return ResponseEntity
+                .status(TaskSuccess.TASK_STATUS_UPDATED_SUCCESS.getStatus())
+                .body(ApiResponse.success(TaskSuccess.TASK_STATUS_UPDATED_SUCCESS.getMessage(), response));
+    }
+
+    /**
+     * 일정을 삭제합니다.
+     *
+     * @param taskId 삭제할 일정 ID
+     * @return 성공 응답 메시지
      */
     @DeleteMapping("/{taskId}")
     public ResponseEntity<ApiResponse<Void>> deleteTask(@PathVariable Long taskId) {
@@ -80,36 +131,3 @@ public class TaskController {
                 .body(ApiResponse.success(TaskSuccess.TASK_DELETED_SUCCESS.getMessage()));
     }
 }
-
-
-/**
- * 일정 제목 키워드 조회 (GET + 페이징)
- * 추후 검색 기능
- */
-    /*
-    @GetMapping(params = {"pageNumber", "size", "title"})
-    public ResponseEntity<List<TaskResponse>> getTasksByTitle(@RequestParam int pageNumber,
-                                                              @RequestParam int size,
-                                                              @RequestParam String title) {
-        var page = taskService.getTasksByTitle(title, pageNumber, size);
-        return ResponseEntity.status(HttpStatus.FOUND)
-                .body(page.getContent());
-    }
-
-    */
-
-/**
- * 일정 설명 키워드 조회 (POST + 페이징)
- * 추후 검색 기능
- */
-    /*
-    @PostMapping(params = {"pageNumber", "size"})
-    public ResponseEntity<List<TaskResponse>> getTasksByDescription(@RequestBody Map<String, String> body,
-                                                                    @RequestParam int pageNumber,
-                                                                    @RequestParam int size) {
-        String description = body.get("description");
-        var page = taskService.getTasksByDescription(description, pageNumber, size);
-        return ResponseEntity.status(HttpStatus.FOUND)
-                .body(page.getContent());
-    }
-    */

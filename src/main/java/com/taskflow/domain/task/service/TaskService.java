@@ -2,26 +2,28 @@ package com.taskflow.domain.task.service;
 
 import com.taskflow.domain.member.entity.Member;
 import com.taskflow.domain.member.repository.MemberRepository;
-import com.taskflow.domain.task.dto.TaskCreateRequest;
-import com.taskflow.domain.task.dto.TaskResponse;
-import com.taskflow.domain.task.dto.TaskUpdateRequest;
+import com.taskflow.domain.task.dto.*;
 import com.taskflow.domain.task.entity.Task;
-import com.taskflow.domain.task.enums.TaskPriority;
 import com.taskflow.domain.task.enums.TaskStatus;
 import com.taskflow.domain.task.exception.*;
 import com.taskflow.domain.task.repository.TaskRepository;
-import jakarta.transaction.Transactional;
+import com.taskflow.global.response.error.TaskError;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.util.EnumMap;
+import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
+/**
+ * 일정(Task) 도메인의 비즈니스 로직을 처리하는 서비스 클래스
+ */
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class TaskService {
 
     private final TaskRepository taskRepository;
@@ -29,125 +31,182 @@ public class TaskService {
 
     /**
      * 일정 생성
+     *
+     * @param request 일정 생성 요청 데이터
+     * @param creatorEmail 생성자 이메일
+     * @return 생성된 일정 상세 정보
      */
-    @Transactional
-    public void createTask(TaskCreateRequest request, String creatorEmail) {
-        // 회원이 탈퇴했는데 토큰은 유효해서 요청을 보낼 경우 예외
+    public TaskDetailResponse createTask(TaskCreateRequest request, String creatorEmail) {
         Member creator = memberRepository.findByEmail(creatorEmail)
-                .orElseThrow(() -> new IllegalArgumentException("생성자를 찾을 수 없습니다."));
+                .orElseThrow(CreatorNotFoundException::new);
 
-        // 담당자가 지정이 안되었을 경우 예외
-        Member manager = memberRepository.findByEmail(request.getManagerName())
-                .orElseThrow(ManagerNotFoundException::new);
+        Member assignee = memberRepository.findById(request.getAssigneeId())
+                .orElseThrow(AssigneeNotFoundException::new);
 
-        // 마감일이 현재보다 이전일 경우 예외
-        if (request.getDueDate() != null && request.getDueDate().isBefore(LocalDate.now().atStartOfDay())) {
-            throw new PastDueDateException();
-        }
+        Task task = new Task(
+                request.getTitle(),
+                request.getDescription(),
+                request.getPriority(),
+                TaskStatus.TODO,
+                request.getDueDate(),
+                creator,
+                assignee
+        );
 
-        Task task = Task.builder()
-                .creator(creator)
-                .manager(manager)
-                .title(request.getTitle())
-                .description(request.getDescription())
-                .priority(request.getPriority() != null ? request.getPriority() : TaskPriority.MEDIUM)
-                .status(request.getStatus() != null ? request.getStatus() : TaskStatus.TODO)
-                .dueDate(request.getDueDate())
-                .startDate(request.getStartDate())
-                .isDeleted(false)
-                .build();
-
-        taskRepository.save(task);
+        Task saved = taskRepository.save(task);
+        return new TaskDetailResponse(saved);
     }
 
     /**
-     * 상태별 일정 목록 그룹핑 (칸반보드 용)
+     * 일정 전체 조회
+     * 상태, 키워드, 담당자 ID 필터링 및 페이징 처리 포함
+     *
+     * @param status 필터링할 일정 상태
+     * @param page 페이지 번호
+     * @param size 페이지 크기
+     * @param search 제목 또는 설명 키워드
+     * @param assigneeId 담당자 ID
+     * @return 페이징된 일정 리스트 응답
      */
-    public Map<TaskStatus, List<TaskResponse>> getTasksByStatusGrouped() {
-        List<Task> allTasks = taskRepository.findAllByIsDeletedFalse();
+    @Transactional(readOnly = true)
+    public TaskPageResponse getTasks(TaskStatus status, Integer page, Integer size, String search, Long assigneeId) {
+        List<Task> tasks = taskRepository.findAllByIsDeletedFalse();
 
-        return allTasks.stream()
-                .collect(Collectors.groupingBy(
-                        Task::getStatus,
-                        () -> new EnumMap<>(TaskStatus.class),
-                        Collectors.mapping(TaskResponse::forKanban, Collectors.toList())
-                ));
+        // 필터링
+        List<Task> filtered = tasks.stream()
+                .filter(task -> status == null || task.getStatus() == status)
+                .filter(task -> {
+                    if (search == null) return true;
+                    String keyword = search.toLowerCase();
+                    return task.getTitle().toLowerCase().contains(keyword)
+                            || task.getDescription().toLowerCase().contains(keyword);
+                })
+                .filter(task -> assigneeId == null || Objects.equals(task.getAssignee().getId(), assigneeId))
+                .collect(Collectors.toList());
+
+        // 결과가 없을 경우 - 일부 조건만 예외 처리
+        if (filtered.isEmpty()) {
+            if (search != null) {
+                throw new TaskNotFoundException(TaskError.TASK_NOT_FOUND_BY_SEARCH);
+            }
+            if (assigneeId != null) {
+                throw new TaskNotFoundException(TaskError.TASK_NOT_FOUND_BY_ASSIGNEE);
+            }
+
+            // status만 조건이거나, 아예 조건 없을 경우엔 빈 결과 반환
+            return new TaskPageResponse(
+                    Collections.emptyList(),
+                    0,
+                    0,
+                    size != null ? size : 0,
+                    page != null ? page : 0
+            );
+        }
+
+        // 페이징 계산
+        int start = (page != null && size != null) ? page * size : 0;
+        int end = (size != null) ? Math.min(start + size, filtered.size()) : filtered.size();
+        List<TaskResponse> paged = filtered.subList(start, end).stream()
+                .map(TaskResponse::new)
+                .toList();
+
+        return new TaskPageResponse(
+                paged,
+                (int) Math.ceil((double) filtered.size() / (size != null ? size : filtered.size())),
+                filtered.size(),
+                size != null ? size : filtered.size(),
+                page != null ? page : 0
+        );
     }
 
 
     /**
      * 일정 단건 조회
+     *
+     * @param taskId 조회할 일정 ID
+     * @return 일정 상세 정보
      */
-    public TaskResponse getTaskById(Long taskId) {
-        Task task = taskRepository.findById(taskId)
-                .filter(t -> !t.getIsDeleted())
+    public TaskDetailResponse getTaskById(Long taskId) {
+        Task task = taskRepository.findByIdAndIsDeletedFalse(taskId)
                 .orElseThrow(TaskNotFoundException::new);
-        return TaskResponse.from(task);
+        return new TaskDetailResponse(task);
     }
 
     /**
-     * 일정 수정 - 생성자 또는 담당자만 수정 가능
+     * 일정 수정
+     *
+     * @param taskId 수정 대상 일정 ID
+     * @param request 수정 요청 데이터
+     * @param requesterEmail 요청자 이메일
+     * @return 수정된 일정 상세 정보
      */
-    @Transactional
-    public void updateTask(Long taskId, TaskUpdateRequest request, String requesterEmail) {
-        // 수정할 일정이 없을 경우 예외
-        Task task = taskRepository.findById(taskId)
+    public TaskDetailResponse updateTask(Long taskId, TaskUpdateRequest request, String requesterEmail) {
+        Task task = taskRepository.findByIdAndIsDeletedFalse(taskId)
                 .orElseThrow(TaskNotFoundException::new);
 
-        // 회원이 탈퇴했는데 토큰은 유효해서 요청을 보낼 경우 예외
-        Member requester = memberRepository.findByEmail(requesterEmail)
-                .orElseThrow(() -> new IllegalArgumentException("수정 요청자를 찾을 수 없습니다."));
+        Member assignee = memberRepository.findById(request.getAssigneeId())
+                .orElseThrow(AssigneeNotFoundException::new);
 
-        // 생성자, 담당자가 아닐 경우 예외
-        if (!task.getCreator().equals(requester) && !task.getManager().equals(requester)) {
-            throw new IllegalArgumentException("수정 권한이 없습니다.");
+        // 권한 확인: 요청자가 현재 할당된 담당자인지 확인
+        if (!task.getAssignee().getEmail().equals(requesterEmail)) {
+            throw new UnauthorizedStatusChangeException(); // 커스텀 예외
         }
 
-        // 담당자가 없을 경우 예외
-        Member manager = memberRepository.findByEmail(request.getManagerName())
-                .orElseThrow(ManagerNotFoundException::new);
+        // 상태 순서 검증
+        TaskStatus currentStatus = task.getStatus();
+        TaskStatus newStatus = request.getStatus();
 
-        // 마감일이 현재보다 이전일 경우 예외
-        if (request.getDueDate() != null && request.getDueDate().isBefore(LocalDate.now().atStartOfDay())) {
-            throw new PastDueDateException();
+        boolean validTransition =
+                (currentStatus == TaskStatus.TODO && newStatus == TaskStatus.IN_PROGRESS) ||
+                        (currentStatus == TaskStatus.IN_PROGRESS && newStatus == TaskStatus.DONE) ||
+                        (currentStatus == newStatus); // 같은 상태로는 허용
+
+        if (!validTransition) {
+            throw new InvalidStatusTransitionException(); // 커스텀 예외
+        }
+
+        // IN_PROGRESS 상태로 바뀔 때 시작일 기록
+        if (currentStatus != TaskStatus.IN_PROGRESS && newStatus == TaskStatus.IN_PROGRESS && task.getStartDate() == null) {
+            task.setStartDate(LocalDateTime.now());
         }
 
         task.update(
                 request.getTitle(),
                 request.getDescription(),
                 request.getPriority(),
-                request.getStatus() != null ? request.getStatus() : TaskStatus.TODO,
+                newStatus,
                 request.getDueDate(),
-                request.getStartDate(),
-                manager
+                assignee
         );
 
-
+        return new TaskDetailResponse(task);
     }
 
     /**
-     * 일정 삭제 (Soft Delete)
+     * 일정 삭제
+     *
+     * @param taskId 삭제할 일정 ID
      */
-    @Transactional
     public void deleteTask(Long taskId) {
-        // 삭제할 일정이 없을 경우 예외
-        Task task = taskRepository.findById(taskId)
+        Task task = taskRepository.findByIdAndIsDeletedFalse(taskId)
                 .orElseThrow(TaskNotFoundException::new);
-        task.softDelete();
+        task.delete();
     }
 
     /**
-     * 일정 키워드 검색 (제목 또는 설명)
+     * 일정 상태만 변경
+     *
+     * @param taskId 대상 일정 ID
+     * @param status 변경할 상태
+     * @return 상태가 변경된 일정 상세 정보
      */
-    /*
-    public List<TaskResponse> searchTasksByKeyword(String keyword) {
-        List<Task> allTasks = taskRepository.findAllByIsDeletedFalse();
-
-        return allTasks.stream()
-                .filter(task -> task.getTitle().toLowerCase().contains(keyword.toLowerCase()) ||
-                        (task.getDescription() != null && task.getDescription().toLowerCase().contains(keyword.toLowerCase())))
-                .map(TaskResponse::from)
-                .collect(Collectors.toList());
+    public TaskDetailResponse updateTaskStatus(Long taskId, TaskStatus status) {
+        Task task = taskRepository.findByIdAndIsDeletedFalse(taskId)
+                .orElseThrow(TaskNotFoundException::new);
+        if (status == null) {
+            throw new InvalidStatusException();
+        }
+        task.changeStatus(status);
+        return new TaskDetailResponse(task);
     }
-    */
 }

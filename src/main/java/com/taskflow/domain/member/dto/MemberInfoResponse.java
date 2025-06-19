@@ -19,4 +19,6 @@ public class MemberInfoResponse {
         this.name = member.getName();
         this.email = member.getEmail();
     }
+
+
 }

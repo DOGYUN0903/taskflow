@@ -1,32 +1,51 @@
 package com.taskflow.domain.task.dto;
 
 import com.taskflow.domain.task.enums.TaskPriority;
-import com.taskflow.domain.task.enums.TaskStatus;
+import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
 /**
- * 일정 생성 요청을 위한 DTO 클래스
- * 클라이언트로부터 일정 생성 요청 데이터를 수신
+ * 일정 생성 요청을 처리하는 DTO
+ * 클라이언트로부터 일정 생성 시 필요한 데이터를 수신
  */
+@Setter
 @Getter
-@Builder
+@NoArgsConstructor
 public class TaskCreateRequest {
 
-    @NotBlank(message = "제목은 필수 입력해주세요.")
+    /**
+     * 일정 제목 (필수)
+     */
+    @NotBlank(message = "제목은 필수입니다.")
     private String title;
+
+    /**
+     * 일정 설명 (선택)
+     */
     private String description;
+
+    /**
+     * 일정 우선순위 (필수)
+     */
+    @NotNull(message = "우선순위는 필수입니다.")
     private TaskPriority priority;
-    @NotBlank(message = "담당자 지정은 필수입니다.")
-    private String managerName;
 
-    private TaskStatus status;
+    /**
+     * 담당자 ID (필수)
+     */
+    @NotNull(message = "담당자 ID는 필수입니다.")
+    private Long assigneeId;
 
-    private LocalDateTime startDate;
-    @NotNull(message = "마감일은 필수로 지정해야 합니다.")
+    /**
+     * 마감일 (현재 시간보다 이후여야 함)
+     */
+    @NotNull(message = "마감일은 필수입니다.")
+    @Future(message = "마감일은 현재보다 이후여야 합니다.")
     private LocalDateTime dueDate;
 }

@@ -7,6 +7,7 @@ public enum TaskSuccess {
     TASK_READ_SUCCESS(HttpStatus.OK, "일정 목록 조회에 성공했습니다."),
     TASK_READ_ONE_SUCCESS(HttpStatus.OK, "일정 단건 조회에 성공했습니다."),
     TASK_UPDATED_SUCCESS(HttpStatus.OK, "일정 수정에 성공했습니다."),
+    TASK_STATUS_UPDATED_SUCCESS(HttpStatus.OK, "작업 상태가 업데이트되었습니다."),
     TASK_DELETED_SUCCESS(HttpStatus.OK, "일정 삭제에 성공했습니다.");
 
     private final HttpStatus status;
