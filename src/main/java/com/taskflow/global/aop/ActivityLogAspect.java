@@ -14,6 +14,7 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
@@ -116,22 +117,30 @@ public class ActivityLogAspect {
 
     // 리턴값에서 targetId 추출
     private Long extractTargetIdFromReturn(Object result) {
-        // 1. 컨트롤러 리턴이 null인 경우 -> 바로 null 반환
-        if (result == null) return null;
+        // 1. 컨트롤러의 리턴값이 null인 경우 -> 바로 null 반환
+        if (result == null) {
+            return null;
+        }
 
-        // 2. 공통 응답 객체 ApiResponse<T> 로 감싸져 있는지 확인
-        if (result instanceof ApiResponse<?> apiResponse) {
-            // 3. 응답 본문 data 꺼내기 (T 타입)
-            Object data = apiResponse.getData();
+        // 2. 리턴값이 ResponseEntity<?> 타입인지 확인
+        if (result instanceof ResponseEntity<?> responseEntity) {
+            // 3. ResponseEntity에서 본문(body) 추출
+            Object body = responseEntity.getBody();
 
-            // 4. 그 data 객체가 HasId 인터페이스를 구현하고 있다면
-            if (data instanceof HasId hasIdData) {
-                // 5. 인터페이스의 getId()를 통해 targetId 반환
-                return hasIdData.getId();
+            // 4. 본문이 ApiResponse<?> 타입인지 확인
+            if (body instanceof ApiResponse<?> apiResponse) {
+                // 5. ApiResponse 안의 data 필드 추출
+                Object data = apiResponse.getData();
+
+                // 6. data가 HasId 인터페이스를 구현한 객체인지 확인
+                if (data instanceof HasId hasIdData) {
+                    // 7. getId() 호출을 통해 targetId 추출
+                    Long targetId = hasIdData.getId();
+                    return targetId;
+                }
             }
         }
 
-        // 6. 추출 실패 시 null 반환
         return null;
     }
 }

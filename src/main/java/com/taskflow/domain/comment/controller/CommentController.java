@@ -1,9 +1,11 @@
 package com.taskflow.domain.comment.controller;
 
+import com.taskflow.domain.activitylog.entity.ActivityType;
 import com.taskflow.domain.comment.dto.CommentRequestDto;
 import com.taskflow.domain.comment.dto.CreateCommentResponseDto;
 import com.taskflow.domain.comment.dto.SearchCommentResponseDto;
 import com.taskflow.domain.comment.service.CommentService;
+import com.taskflow.global.annotation.LogActivity;
 import com.taskflow.global.common.ApiResponse;
 import com.taskflow.global.config.customUserDetails.Entity.CustomUserDetails;
 import com.taskflow.global.response.success.CommentSuccess;
@@ -22,6 +24,7 @@ public class CommentController {
     private final CommentService commentService;
 
     // 댓글 작성
+    @LogActivity(ActivityType.COMMENT_CREATED)
     @PostMapping
     public ResponseEntity<ApiResponse<CreateCommentResponseDto>> createCommentAPI(
             @PathVariable Long taskId,
@@ -48,6 +51,7 @@ public class CommentController {
 
 
     // 댓글 삭제
+    @LogActivity(value = ActivityType.COMMENT_DELETED, target = "commentId")
     @DeleteMapping("/{commentId}")
     public ResponseEntity<ApiResponse<Void>> deleteCommentAPI(
         @PathVariable Long commentId,

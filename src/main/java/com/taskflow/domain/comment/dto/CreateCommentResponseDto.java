@@ -2,13 +2,14 @@ package com.taskflow.domain.comment.dto;
 
 import com.taskflow.domain.comment.entity.Comment;
 import com.taskflow.domain.member.dto.MemberInfoResponse;
+import com.taskflow.global.common.HasId;
 import lombok.Getter;
 import org.springframework.data.domain.Page;
 
 import java.time.LocalDateTime;
 
 @Getter
-public class CreateCommentResponseDto {
+public class CreateCommentResponseDto implements HasId {
 
     private Long id;
     private String content;
@@ -38,4 +39,8 @@ public class CreateCommentResponseDto {
 
      */
 
+    @Override
+    public Long getId() {
+        return id;
+    }
 }

@@ -4,6 +4,7 @@ import com.taskflow.domain.member.dto.MemberInfoResponse;
 import com.taskflow.domain.task.entity.Task;
 import com.taskflow.domain.task.enums.TaskPriority;
 import com.taskflow.domain.task.enums.TaskStatus;
+import com.taskflow.global.common.HasId;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
@@ -13,7 +14,7 @@ import java.time.LocalDateTime;
  * 단건 조회 또는 생성/수정 이후 상세 내용을 포함
  */
 @Getter
-public class TaskDetailResponse {
+public class TaskDetailResponse implements HasId {
 
     /**
      * 일정 ID
@@ -80,5 +81,10 @@ public class TaskDetailResponse {
         this.assignee = new MemberInfoResponse(task.getAssignee());
         this.createdAt = task.getCreatedAt();
         this.updatedAt = task.getUpdatedAt();
+    }
+
+    @Override
+    public Long getId() {
+        return id;
     }
 }

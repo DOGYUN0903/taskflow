@@ -1,8 +1,10 @@
 package com.taskflow.domain.task.controller;
 
+import com.taskflow.domain.activitylog.entity.ActivityType;
 import com.taskflow.domain.task.dto.*;
 import com.taskflow.domain.task.enums.TaskStatus;
 import com.taskflow.domain.task.service.TaskService;
+import com.taskflow.global.annotation.LogActivity;
 import com.taskflow.global.common.ApiResponse;
 import com.taskflow.global.config.customUserDetails.Entity.CustomUserDetails;
 import com.taskflow.global.response.success.TaskSuccess;
@@ -29,6 +31,7 @@ public class TaskController {
      * @param userDetails   로그인한 사용자 정보
      * @return 생성된 일정 정보가 포함된 응답
      */
+    @LogActivity(ActivityType.TASK_CREATED)
     @PostMapping
     public ResponseEntity<ApiResponse<TaskDetailResponse>> createTask(
             @RequestBody @Valid TaskCreateRequest request,
@@ -87,6 +90,7 @@ public class TaskController {
      * @param customUserDetails  로그인한 사용자 정보
      * @return 수정된 일정 정보 응답
      */
+    @LogActivity(value = ActivityType.TASK_UPDATED, target = "taskId")
     @PutMapping("/{taskId}")
     public ResponseEntity<ApiResponse<TaskDetailResponse>> updateTask(
             @PathVariable Long taskId,
@@ -107,6 +111,7 @@ public class TaskController {
      * @param request 상태 변경 요청 DTO
      * @return 상태가 변경된 일정 정보
      */
+    @LogActivity(value = ActivityType.TASK_STATUS_CHANGED, target = "taskId")
     @PatchMapping("/{taskId}/status")
     public ResponseEntity<ApiResponse<TaskDetailResponse>> updateTaskStatus(
             @PathVariable Long taskId,
@@ -125,6 +130,7 @@ public class TaskController {
      * @param taskId 삭제할 일정 ID
      * @return 성공 응답 메시지
      */
+    @LogActivity(value = ActivityType.TASK_DELETED, target = "taskId")
     @DeleteMapping("/{taskId}")
     public ResponseEntity<ApiResponse<Void>> deleteTask(@PathVariable Long taskId) {
         taskService.deleteTask(taskId);
