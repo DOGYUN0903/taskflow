@@ -19,7 +19,8 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
- * 일정(Task) 도메인의 비즈니스 로직을 처리하는 서비스 클래스
+ * 일정(Task) 도메인의 비즈니스 로직을 처리하는 서비스 클래스입니다.
+ * 일정 생성, 조회, 수정, 삭제, 상태 변경 기능을 제공합니다.
  */
 @Service
 @RequiredArgsConstructor
@@ -30,14 +31,14 @@ public class TaskService {
     private final MemberRepository memberRepository;
 
     /**
-     * 일정 생성
+     * 일정을 생성합니다.
      *
-     * @param request 일정 생성 요청 데이터
-     * @param creatorEmail 생성자 이메일
-     * @return 생성된 일정 상세 정보
+     * @param request   일정 생성 요청 DTO
+     * @param memberId  생성자 회원 ID
+     * @return 생성된 일정 상세 정보 DTO
      */
-    public TaskDetailResponse createTask(TaskCreateRequest request, String creatorEmail) {
-        Member creator = memberRepository.findByEmail(creatorEmail)
+    public TaskDetailResponse createTask(TaskCreateRequest request, Long memberId) {
+        Member creator = memberRepository.findById(memberId)
                 .orElseThrow(CreatorNotFoundException::new);
 
         Member assignee = memberRepository.findById(request.getAssigneeId())
@@ -133,24 +134,28 @@ public class TaskService {
     }
 
     /**
-     * 일정 수정
+     * 일정을 수정합니다. 생성자 또는 담당자만 수정 권한이 있으며,
+     * 상태는 유효한 순서 (TODO → IN_PROGRESS → DONE)로만 변경 가능합니다.
      *
-     * @param taskId 수정 대상 일정 ID
-     * @param request 수정 요청 데이터
-     * @param requesterEmail 요청자 이메일
-     * @return 수정된 일정 상세 정보
+     * @param taskId   수정할 일정 ID
+     * @param request  일정 수정 요청 DTO
+     * @param memberId 로그인한 사용자 ID
+     * @return 수정된 일정 상세 정보 DTO
      */
-    public TaskDetailResponse updateTask(Long taskId, TaskUpdateRequest request, String requesterEmail) {
+    public TaskDetailResponse updateTask(Long taskId, TaskUpdateRequest request, Long memberId) {
         Task task = taskRepository.findByIdAndIsDeletedFalse(taskId)
                 .orElseThrow(TaskNotFoundException::new);
 
         Member assignee = memberRepository.findById(request.getAssigneeId())
                 .orElseThrow(AssigneeNotFoundException::new);
 
-        // 권한 확인: 요청자가 현재 할당된 담당자인지 확인
-        if (!task.getAssignee().getEmail().equals(requesterEmail)) {
-            throw new UnauthorizedStatusChangeException(); // 커스텀 예외
+        // 권한 확인: 요청자가 생성자 현재 할당된 담당자인지 확인
+        if (!Objects.equals(task.getAssignee().getId(), memberId)
+                && !Objects.equals(task.getCreator().getId(), memberId)) {
+            throw new UnauthorizedStatusChangeException();
         }
+
+
 
         // 상태 순서 검증
         TaskStatus currentStatus = task.getStatus();
