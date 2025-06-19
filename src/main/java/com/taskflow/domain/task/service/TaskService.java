@@ -19,12 +19,8 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
- * 일정(Task) 도메인의 비즈니스 로직을 처리하는 서비스 클래스입니다.
- * 일정 생성, 조회, 수정, 삭제, 상태 변경 기능을 제공합니다.
- */
-/**
- * TaskService는 일정(Task) 도메인의 핵심 비즈니스 로직을 담당합니다.
- * 일정 생성, 조회, 수정, 삭제, 상태 변경 기능을 제공합니다.
+ * TaskService는 일정(Task) 도메인의 핵심 비즈니스 로직을 담당하는 서비스 클래스
+ * 일정 생성, 조회, 수정, 삭제, 상태 변경 기능 제공
  */
 @Service
 @RequiredArgsConstructor
@@ -35,11 +31,11 @@ public class TaskService {
     private final MemberRepository memberRepository;
 
     /**
-     * 일정을 생성합니다.
+     * 일정을 생성하는 서비스 로직
      *
-     * @param request   일정 생성 요청 DTO
-     * @param memberId  생성자 회원 ID
-     * @return 생성된 일정 상세 정보 DTO
+     * @param request  일정 생성 요청 DTO
+     * @param memberId 생성자 회원 ID
+     * @return 생성된 일정 상세 응답 DTO
      */
     public TaskDetailResponse createTask(TaskCreateRequest request, Long memberId) {
         Member creator = memberRepository.findById(memberId)
@@ -63,21 +59,20 @@ public class TaskService {
     }
 
     /**
-     * 일정 목록을 조회합니다.
-     * 상태, 키워드, 담당자 ID 조건에 따라 필터링하며, 페이징 처리를 지원합니다.
+     * 일정 목록을 조회하는 서비스 로직
+     * 상태, 키워드, 담당자 ID 필터링 및 페이징 처리 지원
      *
-     * @param status     필터링할 일정 상태
+     * @param status     일정 상태
      * @param page       페이지 번호
      * @param size       페이지 크기
-     * @param search     제목 또는 설명 키워드
+     * @param search     검색 키워드
      * @param assigneeId 담당자 ID
-     * @return 조건에 맞는 일정 목록과 페이징 정보 DTO
+     * @return 페이징 처리된 일정 목록 응답 DTO
      */
     @Transactional(readOnly = true)
     public TaskPageResponse getTasks(TaskStatus status, Integer page, Integer size, String search, Long assigneeId) {
         List<Task> tasks = taskRepository.findAllByIsDeletedFalse();
 
-        // 조건별 필터링
         List<Task> filtered = tasks.stream()
                 .filter(task -> status == null || task.getStatus() == status)
                 .filter(task -> {
@@ -89,7 +84,6 @@ public class TaskService {
                 .filter(task -> assigneeId == null || Objects.equals(task.getAssignee().getId(), assigneeId))
                 .collect(Collectors.toList());
 
-        // 결과 없음 처리
         if (filtered.isEmpty()) {
             if (search != null) {
                 throw new TaskNotFoundException(TaskError.TASK_NOT_FOUND_BY_SEARCH);
@@ -98,17 +92,14 @@ public class TaskService {
                 throw new TaskNotFoundException(TaskError.TASK_NOT_FOUND_BY_ASSIGNEE);
             }
 
-            // status만 있거나 조건이 아예 없을 경우 빈 응답
             return new TaskPageResponse(
                     Collections.emptyList(),
-                    0,
-                    0,
+                    0, 0,
                     size != null ? size : 0,
                     page != null ? page : 0
             );
         }
 
-        // 페이징 처리
         int start = (page != null && size != null) ? page * size : 0;
         int end = (size != null) ? Math.min(start + size, filtered.size()) : filtered.size();
         List<TaskResponse> paged = filtered.subList(start, end).stream()
@@ -125,10 +116,10 @@ public class TaskService {
     }
 
     /**
-     * 일정 단건을 조회합니다.
+     * 일정 단건을 조회하는 서비스 로직
      *
      * @param taskId 조회할 일정 ID
-     * @return 일정 상세 정보 DTO
+     * @return 일정 상세 응답 DTO
      */
     public TaskDetailResponse getTaskById(Long taskId) {
         Task task = taskRepository.findByIdAndIsDeletedFalse(taskId)
@@ -137,14 +128,13 @@ public class TaskService {
     }
 
     /**
-     * 일정을 수정합니다.
-     * 생성자 또는 담당자만 수정 가능하며,
-     * 상태 변경 시 순서(TODO → IN_PROGRESS → DONE) 유효성 검사를 수행합니다.
+     * 일정을 수정하는 서비스 로직
+     * 생성자 또는 담당자만 수정 가능하며, 상태 순서 유효성 검증 포함
      *
      * @param taskId   수정할 일정 ID
      * @param request  수정 요청 DTO
-     * @param memberId 요청자 ID
-     * @return 수정된 일정 상세 정보 DTO
+     * @param memberId 요청자 회원 ID
+     * @return 수정된 일정 상세 응답 DTO
      */
     public TaskDetailResponse updateTask(Long taskId, TaskUpdateRequest request, Long memberId) {
         Task task = taskRepository.findByIdAndIsDeletedFalse(taskId)
@@ -191,9 +181,9 @@ public class TaskService {
     }
 
     /**
-     * 일정을 삭제합니다. (소프트 삭제 처리)
+     * 일정을 삭제하는 서비스 로직 (Soft Delete 방식)
      *
-     * @param taskId 삭제할 일정 ID
+     * @param taskId 삭제 대상 일정 ID
      */
     public void deleteTask(Long taskId) {
         Task task = taskRepository.findByIdAndIsDeletedFalse(taskId)
@@ -202,14 +192,13 @@ public class TaskService {
     }
 
     /**
-     * 일정 상태만 별도로 변경합니다.
-     * 생성자 또는 담당자만 상태 변경 가능하며,
-     * 상태 전이 규칙(TODO → IN_PROGRESS → DONE)을 검증합니다.
+     * 일정 상태만 별도로 변경하는 서비스 로직
+     * 생성자 또는 담당자만 변경 가능하며 상태 전이 순서 검증 포함
      *
      * @param taskId    일정 ID
-     * @param newStatus 요청된 상태
-     * @param memberId  요청자 ID
-     * @return 상태가 변경된 일정 상세 정보 DTO
+     * @param newStatus 변경할 상태
+     * @param memberId  요청자 회원 ID
+     * @return 상태가 변경된 일정 상세 응답 DTO
      */
     public TaskDetailResponse updateTaskStatus(Long taskId, TaskStatus newStatus, Long memberId) {
         Task task = taskRepository.findByIdAndIsDeletedFalse(taskId)
