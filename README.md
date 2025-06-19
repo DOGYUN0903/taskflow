@@ -22,12 +22,25 @@ TaskFlow는 사용자가 일정을 생성하고 담당자를 지정하며, 댓�
 
 ---
 
+## ✅ 커밋 컨벤션
+
+```bash
+feat: 기능 추가
+fix: 버그 수정
+refactor: 코드 리팩토링
+docs: 문서 수정
+test: 테스트 코드 작성
+style: 코드 포맷팅 (세미콜론, 줄바꿈 등)
+```
+
+---
+
 ## 🛠️ 기술 스택
 
 | 구분        | 기술 요소 |
 |-------------|-----------|
 | Language    | ![Java](https://img.shields.io/badge/Java-17-blue?logo=java&logoColor=white) |
-| Framework   | ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.x-brightgreen?logo=spring&logoColor=white) |
+| Framework   | ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.x-brightgreen?logo=spring&logoColor=white) ![Spring Security](https://img.shields.io/badge/Spring%20Security-Authorization-success?logo=springsecurity&logoColor=white) |
 | ORM         | ![JPA](https://img.shields.io/badge/JPA-Hibernate-blueviolet) |
 | Database    | ![MySQL](https://img.shields.io/badge/MySQL-8.0-blue?logo=mysql&logoColor=white) |
 | IDE & Build | ![IntelliJ](https://img.shields.io/badge/IntelliJ_IDEA-black?logo=intellijidea&logoColor=white) ![Gradle](https://img.shields.io/badge/Gradle-7.x-02303A?logo=gradle&logoColor=white) |
@@ -137,15 +150,4 @@ TaskFlow는 사용자가 일정을 생성하고 담당자를 지정하며, 댓�
 - 단위 테스트: JUnit 5 + Mockito 기반
 - 목표 테스트 커버리지: 30% 이상
 
----
 
-## ✅ 커밋 컨벤션
-
-```bash
-feat: 기능 추가
-fix: 버그 수정
-refactor: 코드 리팩토링
-docs: 문서 수정
-test: 테스트 코드 작성
-style: 코드 포맷팅 (세미콜론, 줄바꿈 등)
-```
