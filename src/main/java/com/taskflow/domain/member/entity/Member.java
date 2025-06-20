@@ -33,6 +33,7 @@ public class Member extends BaseEntity {
     private UserRole userRole;
 
     @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT false")
+    @Builder.Default
     private Boolean is_deleted = false;
 
     public void softDelete() {
