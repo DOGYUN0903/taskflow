@@ -1,16 +1,19 @@
 package com.taskflow.domain.auth.service;
 
+import com.taskflow.domain.activitylog.entity.ActivityType;
 import com.taskflow.domain.auth.dto.login.LoginRequestDto;
 import com.taskflow.domain.auth.dto.login.LoginResponseDto;
 import com.taskflow.domain.auth.dto.signup.SignupRequestDto;
 import com.taskflow.domain.auth.dto.signup.SignupResponseDto;
+import com.taskflow.domain.auth.dto.withdraw.MemberWithdrawRequestDto;
 import com.taskflow.domain.member.entity.Member;
 import com.taskflow.domain.member.entity.UserRole;
+import com.taskflow.domain.member.exception.*;
 import com.taskflow.domain.member.repository.MemberRepository;
-import com.taskflow.global.exception.member.MemberEmailDuplicateException;
-import com.taskflow.global.exception.member.MemberNotFoundException;
-import com.taskflow.global.exception.member.MemberPasswordMissMatchException;
-import com.taskflow.global.exception.member.MemberUsernameDuplicateException;
+import com.taskflow.domain.member.service.MemberService;
+//import com.taskflow.global.annotation.LogActivity;
+import com.taskflow.global.config.PasswordEncoder;
+import com.taskflow.global.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +23,9 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthServiceImpl implements AuthService {
 
     private final MemberRepository memberRepository;
+    private final MemberService memberService;
+    private final JwtUtil jwtUtil;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     @Override
@@ -35,17 +41,20 @@ public class AuthServiceImpl implements AuthService {
             throw new MemberUsernameDuplicateException();
         }
 
-        //TODO: 비밀번호 암호화 로직 추가
+        if (requestDto.getEmail().equals(requestDto.getUsername())) {
+            throw new MemberEmailUsernameDuplicateException();
+        }
 
-        UserRole userRole = UserRole.of(requestDto.getUserRole());
+        //TODO: 비밀번호 암호화 로직 추가
+        String encodedPassword = passwordEncoder.encode(requestDto.getPassword());
 
         // member 객체 생성
         Member member = Member.builder()
                 .username(requestDto.getUsername())
                 .email(requestDto.getEmail())
-                .password(requestDto.getPassword())
+                .password(encodedPassword)
                 .name(requestDto.getName())
-                .userRole(userRole)
+                .userRole(UserRole.USER)
                 .is_deleted(false)
                 .build();
 
@@ -55,26 +64,38 @@ public class AuthServiceImpl implements AuthService {
         return new SignupResponseDto(savedMember);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     @Override
     public LoginResponseDto login(LoginRequestDto requestDto) {
-        // 이메일 검증하기
-        Member findMember = memberRepository.findByEmail((requestDto.getEmail()))
+        // 아이디 중복 검증 + 탈퇴한 사용자 검증
+        Member findMember = memberRepository.findByUsername(requestDto.getUsername())
+                .filter(member -> !Boolean.TRUE.equals(member.getIs_deleted()))
                 .orElseThrow(() -> new MemberNotFoundException());
 
+
         // 비밀번호 검증하기
-        if (!requestDto.getPassword().equals(findMember.getPassword())) {
-            throw new MemberPasswordMissMatchException();
+        if (!passwordEncoder.matches(requestDto.getPassword(), findMember.getPassword())) {
+            throw new MemberInvalidPasswordException();
         }
 
         //TODO: 토큰 생성 로직 구현
+        String fullToken = jwtUtil.issueJwt(findMember.getEmail(), findMember.getUserRole());
+
+        // Bearer  제거
+        String tokenWithoutPrefix = jwtUtil.getToken(fullToken);
 
         // LoginResponseDto() 생성자 수정 후, 토큰 넣어주기
-        return new LoginResponseDto();
+        return new LoginResponseDto(tokenWithoutPrefix);
     }
 
+    @Transactional
     @Override
-    public void logout() {
-        // 토큰 제거 로직
+    public void withdrawMember(Long memberId, MemberWithdrawRequestDto requestDto) {
+        Member findMember = memberService.findByIdOrElseThrow(memberId);
+
+        if (!passwordEncoder.matches(requestDto.getPassword(), findMember.getPassword())) {
+            throw new MemberInvalidPasswordException();
+        }
+        findMember.softDelete();
     }
 }

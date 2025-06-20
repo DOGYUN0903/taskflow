@@ -1,6 +1,8 @@
 package com.taskflow.domain.task.repository;
 
+
 import com.taskflow.domain.dashboard.repository.TaskRepositoryCustom;
+
 import com.taskflow.domain.member.entity.Member;
 import com.taskflow.domain.task.entity.Task;
 import com.taskflow.domain.task.enums.TaskStatus;
@@ -14,7 +16,11 @@ import java.util.Optional;
 /**
  * Task 엔티티에 대한 데이터베이스 접근을 담당하는 JPA 레포지토리 인터페이스
  */
+
 public interface TaskRepository extends JpaRepository<Task, Long>, TaskRepositoryCustom {
+
+public interface TaskRepository extends JpaRepository<Task, Long> {
+
 
     /**
      * 삭제되지 않은 전체 일정 조회
@@ -60,4 +66,8 @@ public interface TaskRepository extends JpaRepository<Task, Long>, TaskRepositor
      * 상태, 담당자, 제목 키워드 기준으로 삭제되지 않은 일정 조회
      */
     List<Task> findAllByStatusAndAssigneeAndTitleContainingAndIsDeletedFalse(TaskStatus status, Member assignee, String title);
+
 }
+
+}
+

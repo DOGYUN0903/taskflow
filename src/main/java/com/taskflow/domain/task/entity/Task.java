@@ -149,4 +149,8 @@ public class Task {
         this.isDeleted = true;
         this.deletedAt = LocalDateTime.now();
     }
+
 }
+
+}
+
