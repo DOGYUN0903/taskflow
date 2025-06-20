@@ -24,7 +24,4 @@ public class SignupRequestDto {
 
     @NotBlank(message = "사용자 이름은 필수로 입력해주세요.")
     private String name;
-
-    @NotBlank
-    private String userRole;
 }
